@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TITLE="2Status"
-STVER="0.1"
+STVER="0.2"
 OUTDIR="out/"
 OUTEMP="$(mktemp -d)"
 
@@ -134,6 +134,7 @@ do
 done
 
 cat template/footsec.txt >> "$OUTDIR/index.html"
+cp "misc/2status.ico" "$OUTDIR/favicon.ico"
 
 NOW="$(date "+%Y-%m-%d %H:%M") by 2status $STVER"
 

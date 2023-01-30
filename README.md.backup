@@ -4,10 +4,6 @@ Simple public status page.
 
 A server status page using NH1, generating a static page.
 
-## Screenshot
-
-![2Status 0.1](misc/2status-0.1.png)
-
 ## Install
 
 First, you need to install [NH1](https://codeberg.org/cordeis/nh1). If you're using NH1 in your bashrc, it's done. Else, you can put nh1 folder inside 2status folder.
