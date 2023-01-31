@@ -1,6 +1,6 @@
 # 2status
 
-Simple public status page.
+Simple public status page. You can see it working in [2Status Cordéis](https://status.cordeis.com/).
 
 A server status page using NH1, generating a static page.
 
