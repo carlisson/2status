@@ -1,4 +1,10 @@
 </div>
+
+ <div class="card-panel center-align">
+    <i class="material-icons teal-text">check_circle</i>: Online<br>
+    <i class="material-icons red-text">error</i>: Offline
+ </div>
+
         <footer class="page-footer blue-grey">
           <div class="footer-copyright">
             <div class="container">

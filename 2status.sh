@@ -3,7 +3,7 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
-STVER="0.4"
+STVER="0.4.1"
 OUTDIR="out"
 
 if $(grep -q nh1 ~/.bashrc)
@@ -80,14 +80,14 @@ _2status.entry() {
     if [ "$STAT" = "0" ]
     then
         HS="check_circle"
-        HSC=""
+        HSC="teal-text"
         HTC=""
-        HSM="On"
+        HSM=""
     else
         HS="error"
         HSC="red-text"
         HTC="red lighten-5"
-        HSM="Off"
+        HSM=""
     fi
     
     printf "<li class=\"collection-item %s\"><div>%s<b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b></div></li>\n" "$HTC" "$HT" "$HSM" "$HSC" "$HS" >> "$OUTDIR/index.html"

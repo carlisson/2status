@@ -3,3 +3,4 @@
 0.3    2023-01-31: Fixed some bugs. No temp file needed
 0.3.1  2023-01-31: Fixed gitignore
 0.4    2023-01-31: 3-columns layout, but responsive
+0.4.1  2023-01-31: Added card-panel explains status icons
