@@ -3,7 +3,7 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
-STVER="0.3.1"
+STVER="0.4"
 OUTDIR="out"
 
 if $(grep -q nh1 ~/.bashrc)
@@ -34,7 +34,7 @@ _2status.section() {
     if [ $SECTIONS = 'N' ]
     then
         _2status.start
-        SECTIONS=1
+        SECTIONS='Y'
     fi
     if [ $SECTIONS = 'Y' ]
     then
@@ -48,10 +48,8 @@ _2status.section() {
 
 # @description Close page
 _2status.end() {
-    if [ $SECTIONS != 'N' ]
-    then
-        cat template/footsec.txt >> "$OUTDIR/index.html"
-    fi
+    cat template/footsec.txt >> "$OUTDIR/index.html"
+
     cp "misc/2status.ico" "$OUTDIR/favicon.ico"
     NOW="$(date "+%Y-%m-%d %H:%M") by 2status $STVER"
     cat template/footer.txt | sed "s/\-=\[now\]=\-/$NOW/" >> "$OUTDIR/index.html"
@@ -92,7 +90,7 @@ _2status.entry() {
         HSM="Off"
     fi
     
-    printf "<li class=\"collection-item %s\"><div>%s<b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b></div></li>" "$HTC" "$HT" "$HSM" "$HSC" "$HS" >> "$OUTDIR/index.html"
+    printf "<li class=\"collection-item %s\"><div>%s<b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b></div></li>\n" "$HTC" "$HT" "$HSM" "$HSC" "$HS" >> "$OUTDIR/index.html"
 }
 
 PIFS=$IFS
