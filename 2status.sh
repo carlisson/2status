@@ -3,11 +3,11 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
-STVER="0.5"
+STVER="0.6"
 OUTDIR="out"
+VERBOSEMODE="N"
 
-
-function yes_or_no {
+yes_or_no() {
     while true; do
         read -p "$* [y/n]: " yn
         case $yn in
@@ -15,6 +15,21 @@ function yes_or_no {
             [Nn]*) return  1 ;;
         esac
     done
+}
+
+# @description Prints if in verbose mode
+# @arg $1 string Text to print
+_2verb() {
+    if [ "$VERBOSEMODE" = "Y" ]
+    then
+        echo
+        echo "Title $TITLE"
+        echo "Version $STVER"
+        echo "Output dir $OUTDIR"
+        echo "Sections $SECTIONS"
+        echo "Entries $ENTRIES"
+        echo ">>> $*"        
+    fi
 }
 
 if $(grep -q nh1 ~/.bashrc)
@@ -50,8 +65,11 @@ else
 fi
 
 SECTIONS="N"
+ENTRIES=0
+
 # @description Start printing HTML page
 _2status.start() {
+    _2verb "start"
     SECTIONS="Y"
     mkdir -p "$OUTDIR"
     cat template/head.txt | sed "s/\-=\[title\]=\-/$TITLE/g" > "$OUTDIR/index.html"
@@ -60,6 +78,7 @@ _2status.start() {
 # @description Start section
 # @arg $1 string Section title
 _2status.section() {
+    _2verb "section $1"
     NAM="$*"
     if [ $SECTIONS = 'N' ]
     then
@@ -70,15 +89,33 @@ _2status.section() {
     then
         SECTIONS=1
     else
-        cat template/footsec.txt >> "$OUTDIR/index.html"
-        SECTIONS=$((SECTIONS+1))
+        _2status.section_end
     fi
     cat template/headsec.txt | sed "s/\-=\[title\]=\-/$NAM/g" >> "$OUTDIR/index.html"
+    ENTRIES=0
+}
+
+# @description Close a section
+_2status.section_end() {
+    _2verb "section end"
+    if [ $ENTRIES -eq 0 ]
+    then
+            printf "<li class=\"collection-item\"><div>No checking here.</div></li>\n" >> "$OUTDIR/index.html"
+    fi
+    cat template/footsec.txt >> "$OUTDIR/index.html"
+    SECTIONS=$((SECTIONS+1))
 }
 
 # @description Close page
 _2status.end() {
-    cat template/footsec.txt >> "$OUTDIR/index.html"
+    _2verb "end"
+    if [ "$SECTIONS" = "N" ]
+    then
+        echo "Acionado END. $SECTIONS"
+        _2status.section Status
+    fi
+    _2status.section_end
+
 
     cp "misc/2status.ico" "$OUTDIR/favicon.ico"
     NOW="$(date "+%Y-%m-%d %H:%M") by 2status $STVER"
@@ -90,6 +127,7 @@ _2status.end() {
 # @arg $2 string URL or IP
 # @arg $3 int Status. 0 is ok, 1 is fail
 _2status.entry() {
+    _2verb "entry $1 $2 $3"
     PAGE="$1"
     TARG="$2"
     STAT="$3"
@@ -121,57 +159,66 @@ _2status.entry() {
     fi
     
     printf "<li class=\"collection-item %s\"><div>%s<b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b></div></li>\n" "$HTC" "$HT" "$HSM" "$HSC" "$HS" >> "$OUTDIR/index.html"
+    ENTRIES=$((ENTRIES +1))
 }
 
 PIFS=$IFS
 IFS="\n"
 
-cat "2status.conf" | while read line
-do
-    COM="$(echo "$line" | cut -d\| -f 1)"
-    PA1="$(echo "$line" | cut -d\| -f 2)"
-    PA2="$(echo "$line" | cut -d\| -f 3)"
-    PA3="$(echo "$line" | cut -d\| -f 4)"
-    case "$COM" in
-        OUTDIR)
-            OUTDIR="$PA1"
-            ;;
-        TITLE)
-            TITLE="$PA1"
-            ;;
-        HEAD)
-            _2status.section "$PA1"
-            ;;
-        HOST)
-            if $(1ison -q "$PA2")
-            then
-                STAT="0"
-            else
-                STAT="1"
-            fi
-            _2status.entry "$PA1" "$PA2" "$STAT"
-            ;;
-        WEB)
-            if [ $(1httpstatus "$PA2") -eq $PA3 ]
-            then
-                STAT="0"
-            else
-                STAT="1"
-            fi
-            _2status.entry "$PA1" "$PA2" "$STAT"
-            ;;
-        PORT)
-            $(1ports "$PA2" $PA3 >& /dev/null)
-            if [ $? -eq 0 ]
-            then
-                STAT="0"
-            else
-                STAT="1"
-            fi
-            _2status.entry "$PA1" "$PA2" "$STAT"
-            ;;
-    esac
-done
+#if [ -f "2status.conf" ]
+#then
+    
+    while read line
+    do
+        COM="$(echo "$line" | cut -d\| -f 1)"
+        PA1="$(echo "$line" | cut -d\| -f 2)"
+        PA2="$(echo "$line" | cut -d\| -f 3)"
+        PA3="$(echo "$line" | cut -d\| -f 4)"
+        case "$COM" in
+            OUTDIR)
+                OUTDIR="$PA1"
+                ;;
+            TITLE)
+                TITLE="$PA1"
+                ;;
+            HEAD)
+                _2status.section "$PA1"
+                ;;
+            HOST)
+                if $(1ison -q "$PA2")
+                then
+                    STAT="0"
+                else
+                    STAT="1"
+                fi
+                _2status.entry "$PA1" "$PA2" "$STAT"
+                ;;
+            WEB)
+                if [ $(1httpstatus "$PA2") -eq $PA3 ]
+                then
+                    STAT="0"
+                else
+                    STAT="1"
+                fi
+                _2status.entry "$PA1" "$PA2" "$STAT"
+                ;;
+            PORT)
+                $(1ports "$PA2" $PA3 >& /dev/null)
+                if [ $? -eq 0 ]
+                then
+                    STAT="0"
+                else
+                    STAT="1"
+                fi
+                _2status.entry "$PA1" "$PA2" "$STAT"
+                ;;
+        esac
+        export ENTRIES
+        export SECTIONS
+    done <<< $(cat "2status.conf")
+#else
+#    TITLE="No 2status.conf found"
+#fi
 
 _2status.end
 
