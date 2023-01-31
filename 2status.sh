@@ -3,8 +3,19 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
-STVER="0.4.1"
+STVER="0.5"
 OUTDIR="out"
+
+
+function yes_or_no {
+    while true; do
+        read -p "$* [y/n]: " yn
+        case $yn in
+            [Yy]*) return 0  ;;  
+            [Nn]*) return  1 ;;
+        esac
+    done
+}
 
 if $(grep -q nh1 ~/.bashrc)
 then
@@ -14,8 +25,27 @@ else
     then
         source "nh1/nh1"
     else
-        echo "NH1 not found. You can get it with:"
-        echo "  git clone https://codeberg.org/cordeis/nh1"
+        if yes_or_no "NH1 not found. Do you want to download it now?"
+        then
+            REMURL="https://codeberg.org/attachments/e28fd258-d328-411a-bc46-3e8bfa377d8b"
+            if [ -f /usr/bin/wget ]
+            then
+                wget "$REMURL" -O nh1.tgz
+            elif [ -f /usr/bin/curl ]
+            then
+                curl -o nh1.tgz -OL "$REMURL"
+            else
+                echo "2states needs wget or curl to install nh1"
+                exit 1
+            fi
+            tar -zxf nh1.tgz
+            rm nh1.tgz
+            source "nh1/nh1"
+        else
+            echo "You can get it with:"
+            echo "  git clone https://codeberg.org/cordeis/nh1"
+            exit 0
+        fi
     fi
 fi
 
