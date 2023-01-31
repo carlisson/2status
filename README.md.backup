@@ -14,7 +14,7 @@ Edit 2status.conf-example and rename it to 2status.conf:
 * **TITLE** = Page title
 
 You can check status in 3 ways:
-
+ 
 * **HOST** = Test IP with ping
 * **WEB** = Check HTTP status from given URL
 * **PORT** = Check if some TCP port is open

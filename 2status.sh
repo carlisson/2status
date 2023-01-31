@@ -3,7 +3,7 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
-STVER="0.3"
+STVER="0.3.1"
 OUTDIR="out"
 
 if $(grep -q nh1 ~/.bashrc)
