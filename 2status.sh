@@ -3,7 +3,7 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
-STVER="0.6.1"
+STVER="0.6b1"
 OUTDIR="out"
 VERBOSEMODE="N"
 
@@ -170,6 +170,7 @@ then
     
     while read line
     do
+        line=$(echo $line | tr '^' 'n')
         COM="$(echo "$line" | cut -d\| -f 1)"
         PA1="$(echo "$line" | cut -d\| -f 2)"
         PA2="$(echo "$line" | cut -d\| -f 3)"
@@ -215,7 +216,7 @@ then
         esac
         export ENTRIES
         export SECTIONS
-    done <<< $(cat "2status.conf")
+    done <<< $(cat "2status.conf" | tr 'n' '^')
 else
     TITLE="No 2status.conf found"
 fi

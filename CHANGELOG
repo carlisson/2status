@@ -7,3 +7,4 @@
 0.5    2023-01-31: 2status can download NH1 if user wants
 0.6    2023-01-31: No-config bug fixed
 0.6.1  2023-01-31: Minor bug fix
+0.6b1  2023-01-31: Fixed n-missing bug
