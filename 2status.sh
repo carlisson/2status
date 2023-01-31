@@ -3,7 +3,7 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
-STVER="0.6"
+STVER="0.6.1"
 OUTDIR="out"
 VERBOSEMODE="N"
 
@@ -165,8 +165,8 @@ _2status.entry() {
 PIFS=$IFS
 IFS="\n"
 
-#if [ -f "2status.conf" ]
-#then
+if [ -f "2status.conf" ]
+then
     
     while read line
     do
@@ -216,9 +216,9 @@ IFS="\n"
         export ENTRIES
         export SECTIONS
     done <<< $(cat "2status.conf")
-#else
-#    TITLE="No 2status.conf found"
-#fi
+else
+    TITLE="No 2status.conf found"
+fi
 
 _2status.end
 
