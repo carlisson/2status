@@ -1,9 +1,10 @@
 #!/bin/bash
 
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
 TITLE="2Status"
-STVER="0.2"
-OUTDIR="out/"
-OUTEMP="$(mktemp -d)"
+STVER="0.3"
+OUTDIR="out"
 
 if $(grep -q nh1 ~/.bashrc)
 then
@@ -11,12 +12,88 @@ then
 else
     if [ -d "nh1/" ]
     then
-        source "nh1/nh1.sh"
+        source "nh1/nh1"
     else
         echo "NH1 not found. You can get it with:"
         echo "  git clone https://codeberg.org/cordeis/nh1"
     fi
 fi
+
+SECTIONS="N"
+# @description Start printing HTML page
+_2status.start() {
+    SECTIONS="Y"
+    mkdir -p "$OUTDIR"
+    cat template/head.txt | sed "s/\-=\[title\]=\-/$TITLE/g" > "$OUTDIR/index.html"
+}
+
+# @description Start section
+# @arg $1 string Section title
+_2status.section() {
+    NAM="$*"
+    if [ $SECTIONS = 'N' ]
+    then
+        _2status.start
+        SECTIONS=1
+    fi
+    if [ $SECTIONS = 'Y' ]
+    then
+        SECTIONS=1
+    else
+        cat template/footsec.txt >> "$OUTDIR/index.html"
+        SECTIONS=$((SECTIONS+1))
+    fi
+    cat template/headsec.txt | sed "s/\-=\[title\]=\-/$NAM/g" >> "$OUTDIR/index.html"
+}
+
+# @description Close page
+_2status.end() {
+    if [ $SECTIONS != 'N' ]
+    then
+        cat template/footsec.txt >> "$OUTDIR/index.html"
+    fi
+    cp "misc/2status.ico" "$OUTDIR/favicon.ico"
+    NOW="$(date "+%Y-%m-%d %H:%M") by 2status $STVER"
+    cat template/footer.txt | sed "s/\-=\[now\]=\-/$NOW/" >> "$OUTDIR/index.html"
+}
+
+# @description Prints a line
+# @arg $1 string Title
+# @arg $2 string URL or IP
+# @arg $3 int Status. 0 is ok, 1 is fail
+_2status.entry() {
+    PAGE="$1"
+    TARG="$2"
+    STAT="$3"
+    
+    case $SECTIONS in
+        N|Y)
+            _2status.section "Status"
+            ;;
+    esac
+
+    if [[ "$TARG" =~ 'http' ]]
+    then
+        HT="<a href='$TARG'>$PAGE</a>"
+    else
+        HT="$PAGE"
+    fi
+
+    if [ "$STAT" = "0" ]
+    then
+        HS="check_circle"
+        HSC=""
+        HTC=""
+        HSM="On"
+    else
+        HS="error"
+        HSC="red-text"
+        HTC="red lighten-5"
+        HSM="Off"
+    fi
+    
+    printf "<li class=\"collection-item %s\"><div>%s<b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b></div></li>" "$HTC" "$HT" "$HSM" "$HSC" "$HS" >> "$OUTDIR/index.html"
+}
 
 PIFS=$IFS
 IFS="\n"
@@ -29,117 +106,45 @@ do
     PA3="$(echo "$line" | cut -d\| -f 4)"
     case "$COM" in
         OUTDIR)
-            echo "$PA1" > $OUTEMP/out
+            OUTDIR="$PA1"
             ;;
         TITLE)
             TITLE="$PA1"
-            echo "$PA1" > $OUTEMP/tit
+            ;;
+        HEAD)
+            _2status.section "$PA1"
             ;;
         HOST)
             if $(1ison -q "$PA2")
             then
-                STAT="v"
+                STAT="0"
             else
-                STAT="X"
+                STAT="1"
             fi
-            printf "%s|%s\n" "$PA1" "$STAT" >> $OUTEMP/hosts
+            _2status.entry "$PA1" "$PA2" "$STAT"
             ;;
         WEB)
             if [ $(1httpstatus "$PA2") -eq $PA3 ]
             then
-                STAT="v"
+                STAT="0"
             else
-                STAT="X"
+                STAT="1"
             fi
-            printf "%s|%s|%s\n" "$PA1" "$PA2" "$STAT" >> $OUTEMP/web
+            _2status.entry "$PA1" "$PA2" "$STAT"
             ;;
         PORT)
             $(1ports "$PA2" $PA3 >& /dev/null)
             if [ $? -eq 0 ]
             then
-                STAT="v"
+                STAT="0"
             else
-                STAT="X"
+                STAT="1"
             fi
-            printf "%s|%s\n" "$PA1" "$STAT" >> $OUTEMP/ports
+            _2status.entry "$PA1" "$PA2" "$STAT"
             ;;
     esac
 done
 
-TITLE="$(cat "$OUTEMP/tit")"
-cat template/head.txt | sed "s/\-=\[title\]=\-/$TITLE/g" > "$OUTDIR/index.html"
-
-mkdir -p "$OUTDIR"
-
-cat template/headsec.txt | sed "s/\-=\[title\]=\-/Hosts/g" >> "$OUTDIR/index.html"
-
-cat "$OUTEMP/hosts" | while read host
-do
-    HT=$(echo "$host" | cut -d\| -f 1)
-    if [ "$(echo "$host" | cut -d\| -f 2)" = "v" ]
-    then
-        HS="check_circle"
-        HSC=""
-        HTC=""
-    else
-        HS="error"
-        HSC="red-text"
-        HTC="red lighten-5"
-    fi
-    
-    printf "<li class=\"collection-item %s\"><div>%s<b class=\"secondary-content\"><i class=\"material-icons %s\">%s</i></b></div></li>" "$HTC" "$HT" "$HSC" "$HS" >> "$OUTDIR/index.html"
-done
-
-cat template/footsec.txt >> "$OUTDIR/index.html"
-cat template/headsec.txt | sed "s/\-=\[title\]=\-/Websites/g" >> "$OUTDIR/index.html"
-
-cat "$OUTEMP/web" | while read webs
-do
-    HT=$(echo "$webs" | cut -d\| -f 1)
-    HL=$(echo "$webs" | cut -d\| -f 2)
-    if [ "$(echo "$webs" | cut -d\| -f 3)" = "v" ]
-    then
-        HS="check_circle"
-        HSC=""
-        HTC=""
-    else
-        HS="error"
-        HSC="red-text"
-        HTC="red lighten-5"
-    fi
-    
-    printf "<li class=\"collection-item %s\"><div><a href=\"%s\">%s</a><b class=\"secondary-content\"><i class=\"material-icons %s\">%s</i></b></div></li>" "$HTC" "$HL" "$HT" "$HSC" "$HS" >> "$OUTDIR/index.html"
-
-done
-
-cat template/footsec.txt >> "$OUTDIR/index.html"
-cat template/headsec.txt | sed "s/\-=\[title\]=\-/Websites/g" >> "$OUTDIR/index.html"
-
-cat "$OUTEMP/ports" | while read iport
-do
-    HT=$(echo "$iport" | cut -d\| -f 1)
-    if [ "$(echo "$iport" | cut -d\| -f 2)" = "v" ]
-    then
-        HS="check_circle"
-        HSC=""
-        HTC=""
-    else
-        HS="error"
-        HSC="red-text"
-        HTC="red lighten-5"
-    fi
-    
-    printf "<li class=\"collection-item %s\"><div>%s<b class=\"secondary-content\"><i class=\"material-icons %s\">%s</i></b></div></li>" "$HTC" "$HT" "$HSC" "$HS" >> "$OUTDIR/index.html"
-
-done
-
-cat template/footsec.txt >> "$OUTDIR/index.html"
-cp "misc/2status.ico" "$OUTDIR/favicon.ico"
-
-NOW="$(date "+%Y-%m-%d %H:%M") by 2status $STVER"
-
-cat template/footer.txt | sed "s/\-=\[now\]=\-/$NOW/" >> "$OUTDIR/index.html"
+_2status.end
 
 IFS=$PIFS
-
-rm -rf "$OUTEMP"
