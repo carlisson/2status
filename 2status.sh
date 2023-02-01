@@ -3,7 +3,7 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
-STVER="0.6b1"
+STVER="0.6b2"
 OUTDIR="out"
 VERBOSEMODE="N"
 
