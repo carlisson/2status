@@ -4,7 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.6b4"
+STVER="0.6b5"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
@@ -190,6 +190,21 @@ _2status.entry() {
     _2status.log_it "$STAT" "$PAGE"
 }
 
+# @description Check if given host respond to ping
+# @arg $1 string
+_2status.check_host() {
+    local PA1=$1
+    local PA2=$2
+    local STAT
+    if $(1ison -q "$PA2")
+    then
+        STAT="0"
+    else
+        STAT="1"
+    fi
+    _2status.entry "$PA1" "$PA2" "$STAT"
+}
+
 PIFS=$IFS
 IFS="\n"
 
@@ -214,13 +229,7 @@ then
                 _2status.section "$PA1"
                 ;;
             HOST)
-                if $(1ison -q "$PA2")
-                then
-                    STAT="0"
-                else
-                    STAT="1"
-                fi
-                _2status.entry "$PA1" "$PA2" "$STAT"
+                _2status.check_host "$PA1" "$PA2"
                 ;;
             WEB)
                 if [ $(1httpstatus "$PA2") -eq $PA3 ]
@@ -240,6 +249,28 @@ then
                     STAT="1"
                 fi
                 _2status.entry "$PA1" "$PA2" "$STAT"
+                ;;
+            1HOSTGROUP)
+                if [ -f "$_1NETLOCAL/$PA2.hosts" ]
+                then
+                    _2status.section "$PA1"
+                    TOTAL=$(cat "$_1NETLOCAL/$PA2.hosts" | wc -l)
+                    COUNT=0
+                    while [ $COUNT -lt $TOTAL ]
+                    do
+                        COUNT=$((COUNT+1))
+                        HLIN=$(sed -n "$COUNT"p < "$_1NETLOCAL/$PA2.hosts")
+                        HNAM=$(echo $HLIN | cut -f 1 -d "=")
+                        MYIP=$(echo $HLIN | cut -f 2 -d "=" | cut -f 1 -d " ")
+                        echo "$HNAM com ip $MYIP"
+                        if [ $? -eq 0 ]
+                        then
+                            _2status.check_host $HNAM $MYIP
+                        else
+                            _2status.entry "$HNAM" "?" "1"
+                        fi
+                    done
+                fi
                 ;;
         esac
         export ENTRIES
