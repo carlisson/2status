@@ -3,7 +3,8 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
-STVER="0.6b3"
+TEMPLATE="mat"
+STVER="0.6b4"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
@@ -25,6 +26,7 @@ _2verb() {
     then
         echo
         echo "Title $TITLE"
+        echo "Template $TEMPLATE"
         echo "Version $STVER"
         echo "Output dir $OUTDIR"
         echo "Sections $SECTIONS"
@@ -72,7 +74,9 @@ _2status.start() {
     _2verb "start"
     SECTIONS="Y"
     mkdir -p "$OUTDIR" "$LOGDIR"
-    cat template/head.txt | sed "s/\-=\[title\]=\-/$TITLE/g" > "$OUTDIR/index.html"
+    cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$OUTDIR/index.html"
+    cp -r templates/$TEMPLATE/* "$OUTDIR/"
+    rm $OUTDIR/*.txt
 }
 
 # @description Save into 1db
@@ -114,7 +118,7 @@ _2status.section() {
     else
         _2status.section_end
     fi
-    cat template/headsec.txt | sed "s/\-=\[title\]=\-/$NAM/g" >> "$OUTDIR/index.html"
+    cat "templates/$TEMPLATE/headsec.txt" | sed "s/\-=\[title\]=\-/$NAM/g" >> "$OUTDIR/index.html"
     ENTRIES=0
 }
 
@@ -125,7 +129,7 @@ _2status.section_end() {
     then
             printf "<li class=\"collection-item\"><div>No checking here.</div></li>\n" >> "$OUTDIR/index.html"
     fi
-    cat template/footsec.txt >> "$OUTDIR/index.html"
+    cat "templates/$TEMPLATE/footsec.txt" >> "$OUTDIR/index.html"
     SECTIONS=$((SECTIONS+1))
 }
 
@@ -142,7 +146,7 @@ _2status.end() {
 
     cp "misc/2status.ico" "$OUTDIR/favicon.ico"
     NOW="$(date "+%Y-%m-%d %H:%M") by 2status $STVER"
-    cat template/footer.txt | sed "s/\-=\[now\]=\-/$NOW/" >> "$OUTDIR/index.html"
+    cat "templates/$TEMPLATE/footer.txt" | sed "s/\-=\[now\]=\-/$NOW/" >> "$OUTDIR/index.html"
 }
 
 # @description Prints a line
