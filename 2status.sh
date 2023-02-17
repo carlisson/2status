@@ -3,8 +3,9 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
-STVER="0.6b2"
+STVER="0.6b3"
 OUTDIR="out"
+LOGDIR="log"
 VERBOSEMODE="N"
 
 yes_or_no() {
@@ -31,7 +32,6 @@ _2verb() {
         echo ">>> $*"        
     fi
 }
-
 if $(grep -q nh1 ~/.bashrc)
 then
     eval "$(grep nh1 "$HOME/.bashrc")"
@@ -50,7 +50,7 @@ else
             then
                 curl -o nh1.tgz -OL "$REMURL"
             else
-                echo "2states needs wget or curl to install nh1"
+                echo "2status needs wget or curl to install nh1"
                 exit 1
             fi
             tar -zxf nh1.tgz
@@ -58,7 +58,7 @@ else
             source "nh1/nh1"
         else
             echo "You can get it with:"
-            echo "  git clone https://codeberg.org/cordeis/nh1"
+            echo "  git clone https://codeberg.org/bardo/nh1"
             exit 0
         fi
     fi
@@ -71,8 +71,31 @@ ENTRIES=0
 _2status.start() {
     _2verb "start"
     SECTIONS="Y"
-    mkdir -p "$OUTDIR"
+    mkdir -p "$OUTDIR" "$LOGDIR"
     cat template/head.txt | sed "s/\-=\[title\]=\-/$TITLE/g" > "$OUTDIR/index.html"
+}
+
+# @description Save into 1db
+# @arg $1 string Status for test (0: ok; 1: fail)
+# @arg $2 string Host Title
+_2status.log_it() {
+    local _TESTID _STATUS _IDTOTAL _IDON _AUX
+    _STATUS=$1
+    shift
+    _TESTID="$(1morph escape "$*")"
+    if [ ! -f "$LOGDIR/$_TESTID.2st" ]
+    then
+        _1db "$LOGDIR" "2st" new "$_TESTID"
+    fi
+    _IDTOTAL="S$(date "+%Y-%m-%d")"
+    _IDON="$_IDTOTAL""_on"
+    _AUX=$(( $(_1db.get "$LOGDIR" "2st" "$_TESTID" "$_IDTOTAL") + 1 ))
+    _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDTOTAL" $_AUX
+    if [ "$_STATUS" = "0" ]
+    then
+        _AUX=$(( $(_1db.get "$LOGDIR" "2st" "$_TESTID" "$_IDON") + 1 ))
+        _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDON" $_AUX
+    fi
 }
 
 # @description Start section
@@ -160,6 +183,7 @@ _2status.entry() {
     
     printf "<li class=\"collection-item %s\"><div>%s<b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b></div></li>\n" "$HTC" "$HT" "$HSM" "$HSC" "$HS" >> "$OUTDIR/index.html"
     ENTRIES=$((ENTRIES +1))
+    _2status.log_it "$STAT" "$PAGE"
 }
 
 PIFS=$IFS
@@ -224,3 +248,4 @@ fi
 _2status.end
 
 IFS=$PIFS
+_2status.log_it on Teste geral
