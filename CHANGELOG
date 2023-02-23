@@ -12,4 +12,5 @@
 0.6b3  2023-02-17: Saving daily counters (on and total)
 0.6b4  2023-02-17: Template suport
 0.6b5  2023-02-17: monitoring 1hostgroups
+0.6b6  2023-02-23: fixed n-erase bug
 

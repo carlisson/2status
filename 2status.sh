@@ -4,7 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.6b5"
+STVER="0.6b6"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
@@ -206,7 +206,7 @@ _2status.check_host() {
 }
 
 PIFS=$IFS
-IFS="\n"
+IFS=$'\n'
 
 if [ -f "2status.conf" ]
 then
@@ -260,9 +260,9 @@ then
                     do
                         COUNT=$((COUNT+1))
                         HLIN=$(sed -n "$COUNT"p < "$_1NETLOCAL/$PA2.hosts")
-                        HNAM=$(echo $HLIN | cut -f 1 -d "=")
+                        HNAM=$(echo $HLIN | sed 's/\(.*\)=\(.*\)/\1/')
                         MYIP=$(echo $HLIN | cut -f 2 -d "=" | cut -f 1 -d " ")
-                        echo "$HNAM com ip $MYIP"
+                        echo "$HNAM com ip $MYIP [$HLIN]"
                         if [ $? -eq 0 ]
                         then
                             _2status.check_host $HNAM $MYIP
