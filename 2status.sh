@@ -4,7 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.6b7"
+STVER="0.6b8"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
@@ -185,9 +185,57 @@ _2status.entry() {
         HSM=""
     fi
     
-    printf "<li class=\"collection-item %s\"><div>%s<b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b></div></li>\n" "$HTC" "$HT" "$HSM" "$HSC" "$HS" >> "$OUTDIR/index.html"
+    printf "<li class=\"collection-item\"><div class=\"collapsible-header %s\"><b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b>%s</div>\n" "$HTC" "$HSM" "$HSC" "$HS" "$HT" >> "$OUTDIR/index.html"
+    echo "<div class=\"collapsible-body\"><img src=\"$PAGE.svg\" width=\"100%\"></div></li>" >> "$OUTDIR/index.html"
     ENTRIES=$((ENTRIES +1))
     _2status.log_it "$STAT" "$PAGE"
+    _2status.make_chart "$PAGE"
+}
+
+# @description Make a chart
+# @description Checking ID
+_2status.make_chart() {
+    local SINGLE XPOS YPOS COUNT DELTA PERC POINTS DATE
+    local FILE="$OUTDIR/$1.svg"
+    local LOGF="$LOGDIR/$1.2st"
+    local TXTS="$(mktemp)"
+    local TOTAL=$(grep _on= "$LOGF" | wc -l)
+    if [ $TOTAL -gt 30 ]
+    then
+        TOTAL=30
+    elif [ $TOTAL -lt 2 ]
+    then
+        cat "templates/$TEMPLATE/chart-head.txt" \
+            "templates/$TEMPLATE/chart-nodata.txt" \
+            "templates/$TEMPLATE/chart-foot.txt" > "$FILE"
+        return 1
+    fi
+    COUNT=1
+    POINTS=""
+    # (240 - 15) % TOTAL
+    DELTA=$((225/($TOTAL-1)))
+    for SINGLE in $(grep -v _on= "$LOGDIR/$1.2st" | cut -d= -f 1 | tail -n $TOTAL)
+    do
+        if [ $COUNT -eq $TOTAL ]
+        then
+            XPOS=15
+        else
+            XPOS=$((15 + ($TOTAL - $COUNT) * $DELTA ))
+        fi
+        PERC=$(( (100 * $(_1db.get "$LOGDIR" "2st" "$1" "$SINGLE"_on)) / $(_1db.get "$LOGDIR" "2st" "$1" "$SINGLE") ))
+        YPOS=$((110 - $PERC))
+        DATE=$(echo $SINGLE | sed 's/^S//')
+        POINTS="$POINTS $XPOS,$YPOS"
+        cat "templates/$TEMPLATE/chart-date.txt" | \
+        sed "s/\-=\[pos\]=\-/$((XPOS+3))/g" |
+        sed "s/\-=\[textid\]=\-/date$COUNT/g" | \
+        sed "s/\-=\[date\]=\-/$DATE/g" >> "$TXTS"
+        ((COUNT++))        
+    done
+    cat "templates/$TEMPLATE/chart-head.txt" | sed "s/\-=\[points\]=\-/$POINTS/" > "$FILE"
+    cat $TXTS >> $FILE
+    cat "templates/$TEMPLATE/chart-foot.txt" >> "$FILE"
+    rm $TXTS
 }
 
 # @description Check if given host respond to ping

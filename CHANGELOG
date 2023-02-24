@@ -14,3 +14,4 @@
 0.6b5  2023-02-17: monitoring 1hostgroups
 0.6b6  2023-02-23: fixed n-erase bug
 0.6b7  2023-02-24: monitoring ports from hostgroup (1HGPORT)
+0.6b8  2023-02-24: generating availability graphs
