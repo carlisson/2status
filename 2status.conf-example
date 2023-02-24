@@ -13,4 +13,5 @@ PORT|Codeberg SSH|217.197.91.145|22
 PORT|Codeberg IRC|217.197.91.145|194
 PORT|Codeberg IMAP|217.197.91.145|220
 PORT|Codeberg HTTPS|217.197.91.145|443
-1HOSTGROUP|Friendly title|Internal_name
+1HOSTGROUP|Friendly title|Group_name
+1HGPORT|Friendly title|Group_name|22

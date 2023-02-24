@@ -4,7 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.6b6"
+STVER="0.6b7"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
@@ -191,7 +191,8 @@ _2status.entry() {
 }
 
 # @description Check if given host respond to ping
-# @arg $1 string
+# @arg $1 string Title
+# @arg $2 string IP address
 _2status.check_host() {
     local PA1=$1
     local PA2=$2
@@ -203,6 +204,36 @@ _2status.check_host() {
         STAT="1"
     fi
     _2status.entry "$PA1" "$PA2" "$STAT"
+}
+
+# @description Check if given service returns wanted HTTP status
+# @arg $1 string Title
+# @arg $2 string URL
+# @arg $3 int Wanted HTTP status
+_2status.check_web() {
+    local STAT
+    if [ $(1httpstatus "$2") -eq $3 ]
+    then
+        STAT="0"
+    else
+        STAT="1"
+    fi
+    _2status.entry "$1" "$2" "$STAT"
+}
+
+# @description Check if given port is open
+# @arg $1 string Title
+# @arg $2 string IP address
+# @arg $3 int Port number
+_2status.check_port() {
+    $(1ports "$2" $3 >& /dev/null)
+    if [ $? -eq 0 ]
+    then
+        STAT="0"
+    else
+        STAT="1"
+    fi
+    _2status.entry "$1" "$2" "$STAT"
 }
 
 PIFS=$IFS
@@ -232,23 +263,10 @@ then
                 _2status.check_host "$PA1" "$PA2"
                 ;;
             WEB)
-                if [ $(1httpstatus "$PA2") -eq $PA3 ]
-                then
-                    STAT="0"
-                else
-                    STAT="1"
-                fi
-                _2status.entry "$PA1" "$PA2" "$STAT"
+                _2status.check_web "$PA1" "$PA2" "$PA3"
                 ;;
             PORT)
-                $(1ports "$PA2" $PA3 >& /dev/null)
-                if [ $? -eq 0 ]
-                then
-                    STAT="0"
-                else
-                    STAT="1"
-                fi
-                _2status.entry "$PA1" "$PA2" "$STAT"
+                _2status.check_port 
                 ;;
             1HOSTGROUP)
                 if [ -f "$_1NETLOCAL/$PA2.hosts" ]
@@ -262,10 +280,30 @@ then
                         HLIN=$(sed -n "$COUNT"p < "$_1NETLOCAL/$PA2.hosts")
                         HNAM=$(echo $HLIN | sed 's/\(.*\)=\(.*\)/\1/')
                         MYIP=$(echo $HLIN | cut -f 2 -d "=" | cut -f 1 -d " ")
-                        echo "$HNAM com ip $MYIP [$HLIN]"
                         if [ $? -eq 0 ]
                         then
                             _2status.check_host $HNAM $MYIP
+                        else
+                            _2status.entry "$HNAM" "?" "1"
+                        fi
+                    done
+                fi
+                ;;
+            1HGPORT)
+                if [ -f "$_1NETLOCAL/$PA2.hosts" ]
+                then
+                    _2status.section "$PA1"
+                    TOTAL=$(cat "$_1NETLOCAL/$PA2.hosts" | wc -l)
+                    COUNT=0
+                    while [ $COUNT -lt $TOTAL ]
+                    do
+                        COUNT=$((COUNT+1))
+                        HLIN=$(sed -n "$COUNT"p < "$_1NETLOCAL/$PA2.hosts")
+                        HNAM=$(echo $HLIN | sed 's/\(.*\)=\(.*\)/\1/')
+                        MYIP=$(echo $HLIN | cut -f 2 -d "=" | cut -f 1 -d " ")
+                        if [ $? -eq 0 ]
+                        then
+                            _2status.check_port $HNAM $MYIP $PA3
                         else
                             _2status.entry "$HNAM" "?" "1"
                         fi
