@@ -68,7 +68,7 @@
         inkscape:groupmoed="layer"
         id="front">
     <path
-       style="fill:#ff00ff;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:#207f7f;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 15,110 H 240 L -=[points]=- Z"
        id="graph"
        sodipodi:nodetypes="cccccccc" />

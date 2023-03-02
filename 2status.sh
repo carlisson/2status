@@ -4,10 +4,12 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.6b8"
+STVER="0.6b9"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
+TEMPNEW="$OUTDIR/index-$(openssl rand -base64 16 | rev | cut -c 3-7).html"
+
 
 yes_or_no() {
     while true; do
@@ -74,7 +76,7 @@ _2status.start() {
     _2verb "start"
     SECTIONS="Y"
     mkdir -p "$OUTDIR" "$LOGDIR"
-    cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$OUTDIR/index.html"
+    cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$TEMPNEW"
     cp -r templates/$TEMPLATE/* "$OUTDIR/"
     rm $OUTDIR/*.txt
 }
@@ -118,7 +120,7 @@ _2status.section() {
     else
         _2status.section_end
     fi
-    cat "templates/$TEMPLATE/headsec.txt" | sed "s/\-=\[title\]=\-/$NAM/g" >> "$OUTDIR/index.html"
+    cat "templates/$TEMPLATE/headsec.txt" | sed "s/\-=\[title\]=\-/$NAM/g" >> "$TEMPNEW"
     ENTRIES=0
 }
 
@@ -127,9 +129,9 @@ _2status.section_end() {
     _2verb "section end"
     if [ $ENTRIES -eq 0 ]
     then
-            printf "<li class=\"collection-item\"><div>No checking here.</div></li>\n" >> "$OUTDIR/index.html"
+            printf "<li class=\"collection-item\"><div>No checking here.</div></li>\n" >> "$TEMPNEW"
     fi
-    cat "templates/$TEMPLATE/footsec.txt" >> "$OUTDIR/index.html"
+    cat "templates/$TEMPLATE/footsec.txt" >> "$TEMPNEW"
     SECTIONS=$((SECTIONS+1))
 }
 
@@ -146,7 +148,7 @@ _2status.end() {
 
     cp "misc/2status.ico" "$OUTDIR/favicon.ico"
     NOW="$(date "+%Y-%m-%d %H:%M") by 2status $STVER"
-    cat "templates/$TEMPLATE/footer.txt" | sed "s/\-=\[now\]=\-/$NOW/" >> "$OUTDIR/index.html"
+    cat "templates/$TEMPLATE/footer.txt" | sed "s/\-=\[now\]=\-/$NOW/" >> "$TEMPNEW"
 }
 
 # @description Prints a line
@@ -185,8 +187,8 @@ _2status.entry() {
         HSM=""
     fi
     
-    printf "<li class=\"collection-item\"><div class=\"collapsible-header %s\"><b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b>%s</div>\n" "$HTC" "$HSM" "$HSC" "$HS" "$HT" >> "$OUTDIR/index.html"
-    echo "<div class=\"collapsible-body\"><img src=\"$PAGE.svg\" width=\"100%\"></div></li>" >> "$OUTDIR/index.html"
+    printf "<li class=\"collection-item\"><div class=\"collapsible-header %s\"><b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b>%s</div>\n" "$HTC" "$HSM" "$HSC" "$HS" "$HT" >> "$TEMPNEW"
+    echo "<div class=\"collapsible-body\"><img src=\"$PAGE.svg\" width=\"100%\"></div></li>" >> "$TEMPNEW"
     ENTRIES=$((ENTRIES +1))
     _2status.log_it "$STAT" "$PAGE"
     _2status.make_chart "$PAGE"
@@ -214,7 +216,7 @@ _2status.make_chart() {
     POINTS=""
     # (240 - 15) % TOTAL
     DELTA=$((225/($TOTAL-1)))
-    for SINGLE in $(grep -v _on= "$LOGDIR/$1.2st" | cut -d= -f 1 | tail -n $TOTAL)
+    for SINGLE in $(grep -v _on= "$LOGDIR/$1.2st" | cut -d= -f 1 | tail -n $TOTAL | tac)
     do
         if [ $COUNT -eq $TOTAL ]
         then
@@ -227,7 +229,7 @@ _2status.make_chart() {
         DATE=$(echo $SINGLE | sed 's/^S//')
         POINTS="$POINTS $XPOS,$YPOS"
         cat "templates/$TEMPLATE/chart-date.txt" | \
-        sed "s/\-=\[pos\]=\-/$((XPOS+3))/g" |
+        sed "s/\-=\[pos\]=\-/$((XPOS+6))/g" |
         sed "s/\-=\[textid\]=\-/date$COUNT/g" | \
         sed "s/\-=\[date\]=\-/$DATE/g" >> "$TXTS"
         ((COUNT++))        
@@ -367,6 +369,9 @@ else
 fi
 
 _2status.end
+
+cat "$TEMPNEW" > "$OUTDIR/index.html"
+rm "$TEMPNEW"
 
 IFS=$PIFS
 _2status.log_it on Teste geral
