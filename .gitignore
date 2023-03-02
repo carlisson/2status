@@ -1,4 +1,4 @@
-out/favicon.ico
-out/index.html
+out/*
+log/*
 2status.conf
 README.md.backup
