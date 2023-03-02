@@ -23,5 +23,10 @@ You can check status in 3 ways:
 * **WEB** = Check HTTP status from given URL
 * **PORT** = Check if some TCP port is open
 
+Now you can use a host group from NH1:
+
+* **1HOSTGROUP** = Host group saved with 1hostgroup and 1hostset
+* **1HGPORT** = Test a port for all hosts in a hostgroup
+
 **2status** will run and build a static index.html. So, you need to configure Cron to run 2status every minute, every 5 minutes or what you want.
 

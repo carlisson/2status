@@ -16,3 +16,4 @@
 0.6b7  2023-02-24: monitoring ports from hostgroup (1HGPORT)
 0.6b8  2023-02-24: generating availability graphs
 0.6b9  2023-02-24: uses temp file not to break the index
+0.7    2023-03-02: new release
