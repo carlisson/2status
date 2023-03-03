@@ -4,11 +4,11 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.7b1"
+STVER="0.7b2"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
-TEMPNEW="$OUTDIR/index-$(openssl rand -base64 16 | rev | cut -c 3-7).html"
+TEMPNEW="$OUTDIR/index-$(openssl rand -hex 16 | rev | cut -c 3-7).html"
 
 
 yes_or_no() {
@@ -156,10 +156,12 @@ _2status.end() {
 # @arg $2 string URL or IP
 # @arg $3 int Status. 0 is ok, 1 is fail
 _2status.entry() {
+    local PAGE TARG STAT EPAGE
     _2verb "entry $1 $2 $3"
     PAGE="$1"
     TARG="$2"
     STAT="$3"
+    EPAGE="$(1morph escape "$PAGE")"
     
     case $SECTIONS in
         N|Y)
@@ -176,14 +178,14 @@ _2status.entry() {
 
     if [ "$STAT" = "0" ]
     then
-        cat "templates/$TEMPLATE/entry-on.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$PAGE.svg/" >> "$TEMPNEW"
+        cat "templates/$TEMPLATE/entry-on.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
     else
-        cat "templates/$TEMPLATE/entry-off.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$PAGE.svg/" >> "$TEMPNEW"
+        cat "templates/$TEMPLATE/entry-off.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
     fi
     
     ENTRIES=$((ENTRIES +1))
     _2status.log_it "$STAT" "$PAGE"
-    _2status.make_chart "$PAGE"
+    _2status.make_chart "$EPAGE"
 }
 
 # @description Make a chart
@@ -236,8 +238,8 @@ _2status.make_chart() {
 # @arg $1 string Title
 # @arg $2 string IP address
 _2status.check_host() {
-    local PA1=$1
-    local PA2=$2
+    local PA1="$1"
+    local PA2="$2"
     local STAT
     if $(1ison -q "$PA2")
     then
@@ -311,7 +313,7 @@ then
                 _2status.check_web "$PA1" "$PA2" "$PA3"
                 ;;
             PORT)
-                _2status.check_port 
+                _2status.check_port "$PA1" "$PA2" "$PA3"
                 ;;
             1HOSTGROUP)
                 if [ -f "$_1NETLOCAL/$PA2.hosts" ]
