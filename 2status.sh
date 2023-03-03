@@ -4,7 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.7"
+STVER="0.7b1"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
@@ -129,7 +129,7 @@ _2status.section_end() {
     _2verb "section end"
     if [ $ENTRIES -eq 0 ]
     then
-            printf "<li class=\"collection-item\"><div>No checking here.</div></li>\n" >> "$TEMPNEW"
+            cat "templates/$TEMPLATE/sec-empty.txt" >> "$TEMPNEW"
     fi
     cat "templates/$TEMPLATE/footsec.txt" >> "$TEMPNEW"
     SECTIONS=$((SECTIONS+1))
@@ -176,19 +176,11 @@ _2status.entry() {
 
     if [ "$STAT" = "0" ]
     then
-        HS="check_circle"
-        HSC="teal-text"
-        HTC=""
-        HSM=""
+        cat "templates/$TEMPLATE/entry-on.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$PAGE.svg/" >> "$TEMPNEW"
     else
-        HS="error"
-        HSC="red-text"
-        HTC="red lighten-5"
-        HSM=""
+        cat "templates/$TEMPLATE/entry-off.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$PAGE.svg/" >> "$TEMPNEW"
     fi
     
-    printf "<li class=\"collection-item\"><div class=\"collapsible-header %s\"><b class=\"secondary-content\">%s<i class=\"material-icons %s\">%s</i></b>%s</div>\n" "$HTC" "$HSM" "$HSC" "$HS" "$HT" >> "$TEMPNEW"
-    echo "<div class=\"collapsible-body\"><img src=\"$PAGE.svg\" width=\"100%\"></div></li>" >> "$TEMPNEW"
     ENTRIES=$((ENTRIES +1))
     _2status.log_it "$STAT" "$PAGE"
     _2status.make_chart "$PAGE"
@@ -305,6 +297,9 @@ then
                 ;;
             TITLE)
                 TITLE="$PA1"
+                ;;
+            TEMPLATE)
+                TEMPLATE="$PA1"
                 ;;
             HEAD)
                 _2status.section "$PA1"

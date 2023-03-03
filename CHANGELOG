@@ -17,3 +17,4 @@
 0.6b8  2023-02-24: generating availability graphs
 0.6b9  2023-02-24: uses temp file not to break the index
 0.7    2023-03-02: new release
+0.7b1  2023-03-03: Theme support (template folder). New theme matdark

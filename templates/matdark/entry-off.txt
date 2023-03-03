@@ -1,0 +1,9 @@
+<li class="collection-item blue-grey darken-4">
+    <div class="collapsible-header black white-text">
+        <b class="secondary-content"><i class="material-icons red-text darken-4">error</i></b>
+        -=[page]=-
+    </div>
+    <div class="collapsible-body">
+        <img src="-=[chart]=-" width="100%">
+    </div>
+</li>
