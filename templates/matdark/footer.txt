@@ -9,7 +9,7 @@
           <div class="footer-copyright">
             <div class="container">
             Generated at -=[now]=-
-            <a class="grey-text text-lighten-4 right" href="https://codeberg.org/cordeis/2status">2 Status Project</a>
+            <a class="grey-text text-lighten-4 right" href="https://codeberg.org/bardo/2status">2 Status Project</a>
             </div>
           </div>
         </footer>

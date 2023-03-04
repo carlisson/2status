@@ -4,7 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.7b2"
+STVER="0.7b3"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
