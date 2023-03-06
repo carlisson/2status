@@ -1,0 +1,12 @@
+    <text
+       xml:space="preserve"
+       style="font-size:6.0px;line-height:1.25;font-family:monospace;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;stroke-width:0.0717835"
+       x="-112"
+       y="-=[pos]=-"
+       id="-=[textid]=-"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="s-=[textid]=-"
+         style="text-align:end;text-anchor:end;stroke-width:0.0717835"
+         x="-112"
+         y="-=[pos]=-">-=[date]=-</tspan></text>
