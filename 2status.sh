@@ -4,12 +4,11 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.8"
+STVER="0.8a1"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
-TEMPNEW="$OUTDIR/index-$(openssl rand -hex 16 | rev | cut -c 3-7).html"
-
+TEMPNEW=/tmp/.2status-temp #provisory, real path will be created in start
 
 yes_or_no() {
     while true; do
@@ -75,6 +74,7 @@ ENTRIES=0
 _2status.start() {
     _2verb "start"
     SECTIONS="Y"
+    TEMPNEW="$OUTDIR/index-$(openssl rand -hex 16 | rev | cut -c 3-7).html"
     mkdir -p "$OUTDIR" "$LOGDIR"
     cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$TEMPNEW"
     cp -r templates/$TEMPLATE/* "$OUTDIR/"

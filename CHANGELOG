@@ -22,3 +22,4 @@
 0.7b3  2023-03-03: New theme nes (using NES.css)
 0.7b4  2023-03-06: Changed font for SVG in nes theme
 0.8    2023-03-06: new release
+0.8a1  2023-03-06: Fixed minor bug with custom out dir
