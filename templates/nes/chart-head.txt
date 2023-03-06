@@ -10,7 +10,7 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
-  <g
+    <g
      inkscape:label="Background"
      inkscape:groupmode="layer"
      id="back">
@@ -31,7 +31,7 @@
        id="linex" />
     <text
        xml:space="preserve"
-       style="font-size:5.0px;line-height:1.25;font-family:sans-serif;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;stroke-width:0.0717835"
+       style="font-size:5.0px;line-height:1.25;font-family:monospace;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;stroke-width:0.0717835"
        x="14"
        y="108"
        id="text0"><tspan
@@ -42,7 +42,7 @@
          y="108">0%</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:5.0px;line-height:1.25;font-family:sans-serif;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;stroke-width:0.0717835"
+       style="font-size:5.0px;line-height:1.25;font-family:monospace;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;stroke-width:0.0717835"
        x="14"
        y="60"
        id="text50"><tspan
@@ -53,7 +53,7 @@
          y="60">50%</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:5.0px;line-height:1.25;font-family:sans-serif;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;stroke-width:0.0717835"
+       style="font-size:5.0px;line-height:1.25;font-family:monospace;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;stroke-width:0.0717835"
        x="14"
        y="10"
        id="text100"><tspan
@@ -68,7 +68,7 @@
         inkscape:groupmoed="layer"
         id="front">
     <path
-       style="fill:#207f7f;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:#808080;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 15,110 H 240 L -=[points]=- Z"
        id="graph"
        sodipodi:nodetypes="cccccccc" />
