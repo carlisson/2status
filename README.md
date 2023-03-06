@@ -4,9 +4,11 @@ Simple public status page. You can see it working in [2Status Cordéis](https://
 
 A server status page using NH1, generating a static page.
 
-## Screenshot
+## Screenshot (0.8)
 
-![2Status 0.1](misc/2status-0.1.png)
+| Template mat | Template matdark | Template nes |
+|-|-|-|
+| ![2Status 0.8 template mat](misc/2status-0.8-mat.png) | ![2Status 0.8 template matdark](misc/2status-0.8-matdark.png) | ![2Status 0.8 template nes](misc/2status-0.8-nes.png) |
 
 ## Install
 
