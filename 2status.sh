@@ -4,7 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.8a2"
+STVER="0.8a3"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
@@ -45,7 +45,8 @@ else
     else
         if yes_or_no "NH1 not found. Do you want to download it now?"
         then
-            REMURL="https://codeberg.org/attachments/e28fd258-d328-411a-bc46-3e8bfa377d8b"
+            # NH1 v1.4
+            REMURL="https://codeberg.org/attachments/114868ad-8a06-4fd5-a2a5-d0d34d9b36fb"
             if [ -f /usr/bin/wget ]
             then
                 wget "$REMURL" -O nh1.tgz
