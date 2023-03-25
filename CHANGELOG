@@ -27,3 +27,4 @@
 0.8a3  2023-03-14: Updated to install NH1 1.4
 0.8a4  2023-03-24: Updated to NH1 1.4.1. supporting angel templates
 0.8a5  2023-03-25: setting builder angel var
+0.8a6  2023-03-25: created _datediff to store down duration

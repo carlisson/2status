@@ -13,6 +13,103 @@ TEMPSEC=/tmp/.2status-tempsec
 NH1PACK="https://codeberg.org/attachments/114868ad-8a06-4fd5-a2a5-d0d34d9b36fb" # 1.4.1
 BUILDER="2Status $STVER"
 
+# Returns actal time in seconds since 1970
+_now() {
+    date +%s
+}
+
+# Returns seconds diff in human legible
+# @arg 1 int Difference in seconds
+# @arg 2 int abbreviat? 0: yes; 1: no (default)
+_datediff() {
+    local _AUX _ABR _SEC _MIN _HOU _DAY _WEE _YEA
+    _AUX=$1
+    if [ $((_AUX)) -le 0 ]
+    then
+        return 1
+    fi
+    case $# in
+        1)
+            _ABR=1
+            ;;
+        2)
+            _ABR=$2
+            if [ $((_ABR)) -lt 0 -o $((_ABR)) -gt 1 ]
+            then
+                return 2
+            fi
+            ;;
+        *)
+            return 3
+    esac
+    if [ $_AUX -gt 220752000 ] # 1 year
+    then
+        if [ $_ABR -eq 0 ]
+        then
+            _1text "+1y"
+            return 0
+        else
+            printf "$(_1text "approximately %s year(s)") " $((_AUX / 220752000))
+            _AUX=$((_AUX % 220752000))
+        fi
+    fi
+    if [ $_AUX -gt 604800 ] # 1 week
+    then
+        if [ $_ABR -eq 0 ]
+        then
+            printf "$(_1text "%sw")" $((_AUX / 604800))
+            return 0
+        else
+            printf "$(_1text "%s week(s)") " $((_AUX / 604800))
+            _AUX=$((_AUX % 604800))
+        fi
+    fi
+    if [ $_AUX -gt 86400 ] # 1 day
+    then
+        if [ $_ABR -eq 0 ]
+        then
+            printf "$(_1text "%sd")" $((_AUX / 86400))
+            return 0
+        else
+            printf "$(_1text "%s day(s)") " $((_AUX / 86400))
+            _AUX=$((_AUX % 86400))
+        fi
+    fi
+    if [ $_AUX -gt 3600 ] # 1 hour
+    then
+        if [ $_ABR -eq 0 ]
+        then
+            printf "$(_1text "%sh")" $((_AUX / 3600))
+            return 0
+        else
+            printf "$(_1text "%s hour(s)") " $((_AUX / 3600))
+            _AUX=$((_AUX % 3600))
+        fi
+    fi
+    if [ $_AUX -gt 60 ] # 1 min
+    then
+        if [ $_ABR -eq 0 ]
+        then
+            printf "$(_1text "%smin")" $((_AUX / 60))
+            return 0
+        else
+            printf "$(_1text "%s minute(s)") " $((_AUX / 60))
+            _AUX=$((_AUX % 60))
+        fi
+    fi
+    if [ $_AUX -gt 0 ] # 1 min
+    then
+        if [ $_ABR -eq 0 ]
+        then
+            printf "$(_1text "%ss")" $_AUX
+            return 0
+        else
+            printf "$(_1text "%s second(s)") " $_AUX
+        fi
+    fi
+    return 0
+}
+
 yes_or_no() {
     while true; do
         read -p "$* [y/n]: " yn
@@ -95,7 +192,7 @@ _2status.start() {
 # @arg $1 string Status for test (0: ok; 1: fail)
 # @arg $2 string Host Title
 _2status.log_it() {
-    local _TESTID _STATUS _IDTOTAL _IDON _AUX
+    local _TESTID _STATUS _IDTOTAL _IDON _AUX _PREVIOUS
     _STATUS=$1
     shift
     _TESTID="$(1morph escape "$*")"
@@ -103,14 +200,26 @@ _2status.log_it() {
     then
         _1db "$LOGDIR" "2st" new "$_TESTID"
     fi
+    if [ ! -f "$LOGDIR/$_TESTID.2st" ]
+    then
+        _1db "$LOGDIR" "down" new "$_TESTID"
+    fi
     _IDTOTAL="S$(date "+%Y-%m-%d")"
     _IDON="$_IDTOTAL""_on"
+    _IDPREV="$_IDTOTAL""_down"
     _AUX=$(( $(_1db.get "$LOGDIR" "2st" "$_TESTID" "$_IDTOTAL") + 1 ))
+    _PREVIOUS=$(("$(_1db.get "$LOGDIR" "2st" "$_TESTID" "$_IDPREV")"))
+
     _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDTOTAL" $_AUX
     if [ "$_STATUS" = "0" ]
     then
         _AUX=$(( $(_1db.get "$LOGDIR" "2st" "$_TESTID" "$_IDON") + 1 ))
         _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDON" $_AUX
+        if [ $_PREVIOUS -gt 0 ]
+        then
+            _AUX=$(_now)
+            _1message info $_TESTID
+        fi
     fi
 }
 
@@ -223,7 +332,7 @@ _2status.make_chart() {
     POINTS=""
     # (240 - 15) % TOTAL
     DELTA=$((225/($TOTAL-1)))
-    for SINGLE in $(grep -v _on= "$LOGDIR/$1.2st" | cut -d= -f 1 | tail -n $TOTAL | tac)
+    for SINGLE in $(grep -v _on= "$LOGDIR/$1.2st" | grep -v _down= | cut -d= -f 1 | tail -n $TOTAL | tac)
     do
         if [ $COUNT -eq $TOTAL ]
         then
