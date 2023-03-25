@@ -4,11 +4,13 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.8a3"
+STVER="0.8a4"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
-TEMPNEW=/tmp/.2status-temp #provisory, real path will be created in start
+TEMPNEW=/tmp/.2status-tempnew #provisory, real path will be created in start
+TEMPSEC=/tmp/.2status-tempsec
+NH1PACK="https://codeberg.org/attachments/114868ad-8a06-4fd5-a2a5-d0d34d9b36fb" # 1.4.1
 
 yes_or_no() {
     while true; do
@@ -46,13 +48,12 @@ else
         if yes_or_no "NH1 not found. Do you want to download it now?"
         then
             # NH1 v1.4
-            REMURL="https://codeberg.org/attachments/114868ad-8a06-4fd5-a2a5-d0d34d9b36fb"
             if [ -f /usr/bin/wget ]
             then
-                wget "$REMURL" -O nh1.tgz
+                wget "$NH1PACK" -O nh1.tgz
             elif [ -f /usr/bin/curl ]
             then
-                curl -o nh1.tgz -OL "$REMURL"
+                curl -o nh1.tgz -OL "$NH1PACK"
             else
                 echo "2status needs wget or curl to install nh1"
                 exit 1
@@ -71,15 +72,22 @@ fi
 SECTIONS="N"
 ENTRIES=0
 
+# @description Returns a temp file name
+# @arg 1 string File type
+_2status.tmpfile() {
+    echo "$OUTDIR/index-$(1dice 10000).$1"
+}
+
 # @description Start printing HTML page
 _2status.start() {
     _2verb "start"
     SECTIONS="Y"
-    TEMPNEW="$OUTDIR/index-$(openssl rand -hex 16 | rev | cut -c 3-7).html"
+    TEMPNEW="$(_2status.tmpfile html)"
+    TEMPSEC="$(_2status.tmpfile vars)"
     mkdir -p "$OUTDIR" "$LOGDIR"
     cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$TEMPNEW"
     cp -r templates/$TEMPLATE/* "$OUTDIR/"
-    rm $OUTDIR/*.txt
+    rm $OUTDIR/*.txt $OUTDIR/*.angel &> /dev/null
 }
 
 # @description Save into 1db
@@ -123,6 +131,7 @@ _2status.section() {
     fi
     cat "templates/$TEMPLATE/headsec.txt" | sed "s/\-=\[title\]=\-/$NAM/g" >> "$TEMPNEW"
     ENTRIES=0
+    echo "group=$1 entries=$TEMPSEC.$SECTIONS" >> "$TEMPSEC"
 }
 
 # @description Close a section
@@ -180,8 +189,10 @@ _2status.entry() {
     if [ "$STAT" = "0" ]
     then
         cat "templates/$TEMPLATE/entry-on.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
+        echo "entrangel=entry-on.angel page=$PAGE chart=$EPAGE.svg" >> $TEMPSEC.$SECTIONS
     else
         cat "templates/$TEMPLATE/entry-off.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
+        echo "entrangel=entry-off.angel page=$PAGE chart=$EPAGE.svg" >> $TEMPSEC.$SECTIONS
     fi
     
     ENTRIES=$((ENTRIES +1))
@@ -296,7 +307,7 @@ then
         PA3="$(echo "$line" | cut -d\| -f 4)"
         case "$COM" in
             OUTDIR)
-                OUTDIR="$PA1"
+                OUTDIR="$(realpath "$PA1")"
                 ;;
             TITLE)
                 TITLE="$PA1"
@@ -368,8 +379,21 @@ fi
 
 _2status.end
 
-cat "$TEMPNEW" > "$OUTDIR/index.html"
+cat "$TEMPNEW" > "$OUTDIR/previous.html"
 rm "$TEMPNEW"
 
 IFS=$PIFS
+
+if [ -f "templates/$TEMPLATE/main.angel" ]
+then
+    pushd "templates/$TEMPLATE" >& /dev/null
+    _2verb "1angel run title=\"$TITLE\" sections=\"$TEMPSEC\" < main.angel > $OUTDIR/index.html"
+    1angel run title="$TITLE" sections="$TEMPSEC" < main.angel > $OUTDIR/index.html
+    popd >& /dev/null
+else
+    cp "$OUTDIR/previous.html" "$OUTDIR/index.html"
+fi
+
+rm "$TEMPSEC"*
+
 _2status.log_it on Teste geral

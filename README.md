@@ -29,4 +29,3 @@ Now you can use a host group from NH1:
 * **1HGPORT** = Test a port for all hosts in a hostgroup
 
 **2status** will run and build a static index.html. So, you need to configure Cron to run 2status every minute, every 5 minutes or what you want.
-

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>-=[title]=-</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="60">
+ <link rel="icon" type="image/x-icon" href="favicon.ico">
+      <!--Import Google Icon Font-->
+      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+   <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="materialize.min.css">
+    <style>
+      .inline-icon {
+        vertical-align: bottom;
+      }
+    </style>
+<body>
+
+ <nav>
+    <div class="nav-wrapper blue-grey darken-3">
+      <a href="#" class="brand-logo center">-=[title]=-</a>
+    </div>
+  </nav>
+
+ <div class="row">
+
+-=(sections section.angel)=-
+
+</div>
+
+ <div class="card-panel center">
+    <div><i class="inline-icon material-icons teal-text">check_circle</i> Online</div>
+    <div><i class="inline-icon material-icons red-text">error</i> Offline</div>
+ </div>
+
+        <footer class="page-footer blue-grey">
+          <div class="footer-copyright">
+            <div class="container">
+            Generated at -=!now!=-
+            <a class="grey-text text-lighten-4 right" href="https://codeberg.org/bardo/2status">2 Status Project</a>
+            </div>
+          </div>
+        </footer>
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="materialize.min.js"></script>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var elems = document.querySelectorAll('.collapsible');
+        var instances = M.Collapsible.init(elems, {});
+      });
+    </script>
+
+</body>
+</html>
