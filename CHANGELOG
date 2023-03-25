@@ -25,4 +25,5 @@
 0.8a1  2023-03-06: Fixed minor bug with custom out dir
 0.8a2  2023-03-06: Fixed nes favicon
 0.8a3  2023-03-14: Updated to install NH1 1.4
-0.8a4  2023-03-14: Updated to NH1 1.4.1. supporting angel templates
+0.8a4  2023-03-24: Updated to NH1 1.4.1. supporting angel templates
+0.8a5  2023-03-25: setting builder angel var

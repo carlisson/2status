@@ -36,7 +36,7 @@
         <footer class="page-footer blue-grey">
           <div class="footer-copyright">
             <div class="container">
-            Generated at -=!now!=-
+            Generated at <b>-=!now!=-</b> by -=!builder!=-
             <a class="grey-text text-lighten-4 right" href="https://codeberg.org/bardo/2status">2 Status Project</a>
             </div>
           </div>

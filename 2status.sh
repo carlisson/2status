@@ -4,13 +4,14 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.8a4"
+STVER="0.8a5"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
 TEMPNEW=/tmp/.2status-tempnew #provisory, real path will be created in start
 TEMPSEC=/tmp/.2status-tempsec
 NH1PACK="https://codeberg.org/attachments/114868ad-8a06-4fd5-a2a5-d0d34d9b36fb" # 1.4.1
+BUILDER="2Status $STVER"
 
 yes_or_no() {
     while true; do
@@ -386,6 +387,7 @@ IFS=$PIFS
 
 if [ -f "templates/$TEMPLATE/main.angel" ]
 then
+    _1ANGELBUILDER="$BUILDER"
     pushd "templates/$TEMPLATE" >& /dev/null
     _2verb "1angel run title=\"$TITLE\" sections=\"$TEMPSEC\" < main.angel > $OUTDIR/index.html"
     1angel run title="$TITLE" sections="$TEMPSEC" < main.angel > $OUTDIR/index.html
