@@ -4,7 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.8a5"
+STVER="0.8a7"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
@@ -28,6 +28,11 @@ _datediff() {
     then
         return 1
     fi
+    _AUX=$(( $(_now) - _AUX ))
+    if [ $((_AUX)) -le 0 ]
+    then
+        return 2
+    fi
     case $# in
         1)
             _ABR=1
@@ -36,11 +41,11 @@ _datediff() {
             _ABR=$2
             if [ $((_ABR)) -lt 0 -o $((_ABR)) -gt 1 ]
             then
-                return 2
+                return 3
             fi
             ;;
         *)
-            return 3
+            return 4
     esac
     if [ $_AUX -gt 220752000 ] # 1 year
     then
@@ -188,6 +193,22 @@ _2status.start() {
     rm $OUTDIR/*.txt $OUTDIR/*.angel &> /dev/null
 }
 
+# @description Alert when test become up or down
+# @arg $1 string Service name
+# @arg $2 status 0: ok; 1: fail
+# @arg $3 int Since (if fail)
+_2status.alert() {
+    local _MSG _NOW
+    _NOW=$(date "+%Y-%m-%d_%H-%M")
+    if [ $2 -eq 0 ]
+    then
+        _MSG="$(printf "$(_1text "Service %s is up now (%s) after %s")" "$1" "$_NOW" $3)"
+    else
+        _MSG="$(printf "$(_1text "Service %s is down (%s)")" "$1" "$_NOW")"
+    fi
+    1ui say "$_MSG"
+}
+
 # @description Save into 1db
 # @arg $1 string Status for test (0: ok; 1: fail)
 # @arg $2 string Host Title
@@ -200,7 +221,7 @@ _2status.log_it() {
     then
         _1db "$LOGDIR" "2st" new "$_TESTID"
     fi
-    if [ ! -f "$LOGDIR/$_TESTID.2st" ]
+    if [ ! -f "$LOGDIR/$_TESTID.down" ]
     then
         _1db "$LOGDIR" "down" new "$_TESTID"
     fi
@@ -217,8 +238,16 @@ _2status.log_it() {
         _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDON" $_AUX
         if [ $_PREVIOUS -gt 0 ]
         then
-            _AUX=$(_now)
-            _1message info $_TESTID
+            _AUX=$(_datediff $_PREVIOUS)
+            _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV" 0
+            _1db.set  "$LOGDIR" "down" "$_TESTID" "$(date -d @$_PREVIOUS "+%Y-%m-%d_%H-%M")" $_AUX
+            _2status.alert "$_TESTID" 0 $_AUX
+        fi
+    else
+        if [ $_PREVIOUS -eq 0 ]
+        then
+            _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV" $(_now)
+            _2status.alert "$_TESTID" 1
         fi
     fi
 }
