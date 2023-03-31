@@ -230,7 +230,7 @@ _2status.start() {
 # @arg $3 int Since (if fail)
 _2status.alert() {
     local _MSG _NOW
-    _NOW="$(date "+%Y-%m-%d_%H-%M")"
+    _NOW="$(date "+%Y-%m-%d %H-%M")"
     if [ ! -z "$BOT_TELEGRAM" ]
     then
         _2verb "service $1, status $2, downtime $3"
