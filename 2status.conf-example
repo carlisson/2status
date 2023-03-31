@@ -1,6 +1,7 @@
 OUTDIR|out
 TITLE|2Status Page
 TEMPLATE|mat
+BOT|telegram|teste
 
 HEAD|Hosts
 HOST|Codeberg|217.197.91.145

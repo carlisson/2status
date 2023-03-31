@@ -4,14 +4,15 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TITLE="2Status"
 TEMPLATE="mat"
-STVER="0.8a7"
+STVER="$(tail -n 1 "CHANGELOG" | cut -d\  -f 1)"
 OUTDIR="out"
 LOGDIR="log"
 VERBOSEMODE="N"
 TEMPNEW=/tmp/.2status-tempnew #provisory, real path will be created in start
 TEMPSEC=/tmp/.2status-tempsec
-NH1PACK="https://codeberg.org/attachments/114868ad-8a06-4fd5-a2a5-d0d34d9b36fb" # 1.4.1
+NH1PACK="https://codeberg.org/attachments/7416b0f6-5daa-4b53-9283-b5d6f5fc419b" # 1.4.2
 BUILDER="2Status $STVER"
+BOT_TELEGRAM="" # telegram group
 
 # Returns actal time in seconds since 1970
 _now() {
@@ -54,7 +55,12 @@ _datediff() {
             _1text "+1y"
             return 0
         else
-            printf "$(_1text "approximately %s year(s)") " $((_AUX / 220752000))
+            if [ $_AUX -ge 441504000 ]
+            then
+                printf "$(_1text "%s years") " $((_AUX / 220752000))
+            else
+                printf "$(_1text "%s year") " $((_AUX / 220752000))
+            fi
             _AUX=$((_AUX % 220752000))
         fi
     fi
@@ -65,7 +71,12 @@ _datediff() {
             printf "$(_1text "%sw")" $((_AUX / 604800))
             return 0
         else
-            printf "$(_1text "%s week(s)") " $((_AUX / 604800))
+            if [ $_AUX -ge 1209600 ]
+            then
+                printf "$(_1text "%s weeks") " $((_AUX / 604800))
+            else
+                printf "$(_1text "%s week") " $((_AUX / 604800))
+            fi
             _AUX=$((_AUX % 604800))
         fi
     fi
@@ -76,7 +87,12 @@ _datediff() {
             printf "$(_1text "%sd")" $((_AUX / 86400))
             return 0
         else
-            printf "$(_1text "%s day(s)") " $((_AUX / 86400))
+            if [ $_AUX -ge 172800 ]
+            then
+                printf "$(_1text "%s days") " $((_AUX / 86400))
+            else
+                printf "$(_1text "%s day") " $((_AUX / 86400))
+            fi
             _AUX=$((_AUX % 86400))
         fi
     fi
@@ -87,7 +103,12 @@ _datediff() {
             printf "$(_1text "%sh")" $((_AUX / 3600))
             return 0
         else
-            printf "$(_1text "%s hour(s)") " $((_AUX / 3600))
+            if [ $_AUX -ge 7200 ]
+            then
+                printf "$(_1text "%s hours") " $((_AUX / 3600))
+            else
+                printf "$(_1text "%s hour") " $((_AUX / 3600))
+            fi
             _AUX=$((_AUX % 3600))
         fi
     fi
@@ -98,7 +119,12 @@ _datediff() {
             printf "$(_1text "%smin")" $((_AUX / 60))
             return 0
         else
-            printf "$(_1text "%s minute(s)") " $((_AUX / 60))
+            if [ $_AUX -ge 120 ]
+            then
+                printf "$(_1text "%s minutes") " $((_AUX / 60))
+            else
+                printf "$(_1text "%s minute") " $((_AUX / 60))
+            fi
             _AUX=$((_AUX % 60))
         fi
     fi
@@ -109,7 +135,12 @@ _datediff() {
             printf "$(_1text "%ss")" $_AUX
             return 0
         else
-            printf "$(_1text "%s second(s)") " $_AUX
+            if [ $_AUX -gt 1 ]
+            then
+                printf "$(_1text "%s seconds") " $_AUX
+            else
+                printf "$(_1text "%s second") " $_AUX
+            fi
         fi
     fi
     return 0
@@ -199,14 +230,19 @@ _2status.start() {
 # @arg $3 int Since (if fail)
 _2status.alert() {
     local _MSG _NOW
-    _NOW=$(date "+%Y-%m-%d_%H-%M")
-    if [ $2 -eq 0 ]
+    _NOW="$(date "+%Y-%m-%d_%H-%M")"
+    if [ ! -z "$BOT_TELEGRAM" ]
     then
-        _MSG="$(printf "$(_1text "Service %s is up now (%s) after %s")" "$1" "$_NOW" $3)"
-    else
-        _MSG="$(printf "$(_1text "Service %s is down (%s)")" "$1" "$_NOW")"
+        _2verb "service $1, status $2, downtime $3"
+        if [ $2 -eq 0 ]
+        then
+            _MSG="Service $1 is up $_NOW after $3."
+        else    
+            _MSG="Service $1 is down $_NOW."
+        fi
+        echo "$_MSG" >&2
+        1bot telegram say "$BOT_TELEGRAM" "$_MSG"
     fi
-    1ui say "$_MSG"
 }
 
 # @description Save into 1db
@@ -454,6 +490,12 @@ then
             TEMPLATE)
                 TEMPLATE="$PA1"
                 ;;
+            BOT)
+                if [ "$PA1" = "telegram" ]
+                then
+                    BOT_TELEGRAM="$PA2"
+                fi
+                ;;
             HEAD)
                 _2status.section "$PA1"
                 ;;
@@ -527,8 +569,8 @@ if [ -f "templates/$TEMPLATE/main.angel" ]
 then
     _1ANGELBUILDER="$BUILDER"
     pushd "templates/$TEMPLATE" >& /dev/null
-    _2verb "1angel run title=\"$TITLE\" sections=\"$TEMPSEC\" < main.angel > $OUTDIR/index.html"
-    1angel run title="$TITLE" sections="$TEMPSEC" < main.angel > $OUTDIR/index.html
+    _2verb "1angel main.angel run title=\"$TITLE\" sections=\"$TEMPSEC\" > $OUTDIR/index.html"
+    1angel run main.angel title="$TITLE" sections="$TEMPSEC" > $OUTDIR/index.html
     popd >& /dev/null
 else
     cp "$OUTDIR/previous.html" "$OUTDIR/index.html"
