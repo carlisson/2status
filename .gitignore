@@ -2,3 +2,4 @@ out/*
 log/*
 2status.conf
 README.md.backup
+templates/2status-*
