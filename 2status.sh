@@ -248,6 +248,7 @@ _2status.alert() {
 # @description Save into 1db
 # @arg $1 string Status for test (0: ok; 1: fail)
 # @arg $2 string Host Title
+# @stdout string Downtime
 _2status.log_it() {
     local _TESTID _STATUS _IDTOTAL _IDON _AUX _PREVIOUS
     _STATUS=$1
@@ -262,8 +263,13 @@ _2status.log_it() {
         _1db "$LOGDIR" "down" new "$_TESTID"
     fi
     _IDTOTAL="S$(date "+%Y-%m-%d")"
+
+    _IDPREV=$(grep "_down="  log/Mastodon.2st |tail -n 1 | sed 's/\(.*\)=\(.*\)/\1/')
+    if [ -z "$_IDTOTAL" ]
+    then
+        _IDPREV="$_IDTOTAL""_down"
+    fi
     _IDON="$_IDTOTAL""_on"
-    _IDPREV="$_IDTOTAL""_down"
     _AUX=$(( $(_1db.get "$LOGDIR" "2st" "$_TESTID" "$_IDTOTAL") + 1 ))
     _PREVIOUS=$(("$(_1db.get "$LOGDIR" "2st" "$_TESTID" "$_IDPREV")"))
 
@@ -275,7 +281,7 @@ _2status.log_it() {
         if [ $_PREVIOUS -gt 0 ]
         then
             _AUX=$(_datediff $_PREVIOUS)
-            _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV" 0
+            _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV"
             _1db.set  "$LOGDIR" "down" "$_TESTID" "$(date -d @$_PREVIOUS "+%Y-%m-%d_%H-%M")" $_AUX
             _2status.alert "$_TESTID" 0 $_AUX
         fi
@@ -284,8 +290,13 @@ _2status.log_it() {
         then
             _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV" $(_now)
             _2status.alert "$_TESTID" 1
+        else
+            echo "$_PREVIOUS"
+            return 0
         fi
     fi
+    echo "0"
+    return 0
 }
 
 # @description Start section
@@ -341,7 +352,7 @@ _2status.end() {
 # @arg $2 string URL or IP
 # @arg $3 int Status. 0 is ok, 1 is fail
 _2status.entry() {
-    local PAGE TARG STAT EPAGE
+    local PAGE TARG STAT EPAGE DT
     _2verb "entry $1 $2 $3"
     PAGE="$1"
     TARG="$2"
@@ -361,17 +372,18 @@ _2status.entry() {
         HT="$PAGE"
     fi
 
+    DT="$(_2status.log_it "$STAT" "$PAGE")"
     if [ "$STAT" = "0" ]
     then
         cat "templates/$TEMPLATE/entry-on.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
         echo "entrangel=entry-on.angel page=$PAGE chart=$EPAGE.svg" >> $TEMPSEC.$SECTIONS
     else
+        DT="$(_datediff $DT 0)"
         cat "templates/$TEMPLATE/entry-off.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
-        echo "entrangel=entry-off.angel page=$PAGE chart=$EPAGE.svg" >> $TEMPSEC.$SECTIONS
+        echo "entrangel=entry-off.angel page=$PAGE chart=$EPAGE.svg downtime=$DT" >> $TEMPSEC.$SECTIONS
     fi
     
     ENTRIES=$((ENTRIES +1))
-    _2status.log_it "$STAT" "$PAGE"
     _2status.make_chart "$EPAGE"
 }
 
@@ -405,7 +417,7 @@ _2status.make_chart() {
         else
             XPOS=$((15 + ($TOTAL - $COUNT) * $DELTA ))
         fi
-        PERC=$(( (100 * $(_1db.get "$LOGDIR" "2st" "$1" "$SINGLE"_on)) / $(_1db.get "$LOGDIR" "2st" "$1" "$SINGLE") ))
+        PERC=$(( (100 * $(( $(_1db.get "$LOGDIR" "2st" "$1" "$SINGLE"_on) )) ) / $(_1db.get "$LOGDIR" "2st" "$1" "$SINGLE") ))
         YPOS=$((110 - $PERC))
         DATE=$(echo $SINGLE | sed 's/^S//')
         POINTS="$POINTS $XPOS,$YPOS"
@@ -577,5 +589,3 @@ else
 fi
 
 rm "$TEMPSEC"*
-
-_2status.log_it on Teste geral
