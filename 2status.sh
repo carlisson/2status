@@ -230,15 +230,15 @@ _2status.start() {
 # @arg $3 int Since (if fail)
 _2status.alert() {
     local _MSG _NOW
-    _NOW="$(date "+%Y-%m-%d %H-%M")"
+    _NOW="$(date "+%Y-%m-%d %H:%M")"
     if [ ! -z "$BOT_TELEGRAM" ]
     then
         _2verb "service $1, status $2, downtime $3"
         if [ $2 -eq 0 ]
         then
-            _MSG="Service $1 is up $_NOW after $3."
+            _MSG="✅ Service $1 is up $_NOW after $3."
         else    
-            _MSG="Service $1 is down $_NOW."
+            _MSG="⚠️ Service $1 is down $_NOW."
         fi
         echo "$_MSG" >&2
         1bot telegram say "$BOT_TELEGRAM" "$_MSG"
@@ -264,7 +264,7 @@ _2status.log_it() {
     fi
     _IDTOTAL="S$(date "+%Y-%m-%d")"
 
-    _IDPREV=$(grep "_down="  log/Mastodon.2st |tail -n 1 | sed 's/\(.*\)=\(.*\)/\1/')
+    _IDPREV=$(grep "_down="  "$LOGDIR/$_TESTID.2st" |tail -n 1 | sed 's/\(.*\)=\(.*\)/\1/')
     if [ -z "$_IDTOTAL" ]
     then
         _IDPREV="$_IDTOTAL""_down"
@@ -282,7 +282,7 @@ _2status.log_it() {
         then
             _AUX=$(_datediff $_PREVIOUS)
             _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV"
-            _1db.set  "$LOGDIR" "down" "$_TESTID" "$(date -d @$_PREVIOUS "+%Y-%m-%d_%H-%M")" $_AUX
+            _1db.set  "$LOGDIR" "down" "$_TESTID" "$(date -d @$_PREVIOUS "+%Y-%m-%d_%H:%M")" $_AUX
             _2status.alert "$_TESTID" 0 $_AUX
         fi
     else
