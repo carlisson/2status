@@ -206,18 +206,12 @@ fi
 SECTIONS="N"
 ENTRIES=0
 
-# @description Returns a temp file name
-# @arg 1 string File type
-_2status.tmpfile() {
-    echo "$OUTDIR/index-$(1dice 10000).$1"
-}
-
 # @description Start printing HTML page
 _2status.start() {
     _2verb "start"
     SECTIONS="Y"
-    TEMPNEW="$(_2status.tmpfile html)"
-    TEMPSEC="$(_2status.tmpfile vars)"
+    TEMPNEW="$(1temp name .html)"
+    TEMPSEC="$(1temp name .vars)"
     mkdir -p "$OUTDIR" "$LOGDIR"
     cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$TEMPNEW"
     cp -r templates/$TEMPLATE/* "$OUTDIR/"
@@ -582,8 +576,9 @@ then
     _1ANGELBUILDER="$BUILDER"
     pushd "templates/$TEMPLATE" >& /dev/null
     _2verb "1angel main.angel run title=\"$TITLE\" sections=\"$TEMPSEC\" > $OUTDIR/index.html"
-    1angel run main.angel title="$TITLE" sections="$TEMPSEC" > $OUTDIR/index.html
+    1angel run main.angel title="$TITLE" sections="$TEMPSEC" > $OUTDIR/angel.html
     popd >& /dev/null
+    mv "$OUTDIR/angel.html" $OUTDIR/index.html
 else
     cp "$OUTDIR/previous.html" "$OUTDIR/index.html"
 fi
