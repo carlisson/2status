@@ -13,6 +13,7 @@ TEMPSEC=/tmp/.2status-tempsec
 NH1PACK="https://codeberg.org/attachments/7416b0f6-5daa-4b53-9283-b5d6f5fc419b" # 1.4.2
 BUILDER="2Status $STVER"
 BOT_TELEGRAM="" # telegram group
+ATTEMPS=3 # when checking results in error, how many times to try again?
 
 # Returns actal time in seconds since 1970
 _now() {
@@ -433,14 +434,17 @@ _2status.make_chart() {
 _2status.check_host() {
     local PA1="$1"
     local PA2="$2"
-    local STAT
-    if $(1ison -q "$PA2")
-    then
-        STAT="0"
-    else
-        STAT="1"
-    fi
-    _2status.entry "$PA1" "$PA2" "$STAT"
+    local I
+    for I in $(seq $ATTEMPS)
+    do
+        if $(1ison -q "$PA2")
+        then
+            _2status.entry "$PA1" "$PA2" "0"
+            return 0
+        fi
+    done
+    _2status.entry "$PA1" "$PA2" "1"
+    return 1
 }
 
 # @description Check if given service returns wanted HTTP status
@@ -448,14 +452,17 @@ _2status.check_host() {
 # @arg $2 string URL
 # @arg $3 int Wanted HTTP status
 _2status.check_web() {
-    local STAT
-    if [ $(1httpstatus "$2") -eq $3 ]
-    then
-        STAT="0"
-    else
-        STAT="1"
-    fi
-    _2status.entry "$1" "$2" "$STAT"
+    local I
+    for I in $(seq $ATTEMPS)
+    do
+        if [ $(1httpstatus "$2") -eq $3 ]
+        then
+            _2status.entry "$1" "$2" "0"
+            return 0
+        fi
+    done
+    _2status.entry "$1" "$2" "1"
+    return 1
 }
 
 # @description Check if given port is open
@@ -463,14 +470,18 @@ _2status.check_web() {
 # @arg $2 string IP address
 # @arg $3 int Port number
 _2status.check_port() {
-    $(1ports "$2" $3 >& /dev/null)
-    if [ $? -eq 0 ]
-    then
-        STAT="0"
-    else
-        STAT="1"
-    fi
-    _2status.entry "$1" "$2" "$STAT"
+    local I
+    for I in $(seq $ATTEMPS)
+    do
+        $(1ports "$2" $3 >& /dev/null)
+        if [ $? -eq 0 ]
+        then
+            _2status.entry "$1" "$2" "0"
+            return 0
+        fi
+    done
+    _2status.entry "$1" "$2" "1"
+    return 1
 }
 
 PIFS=$IFS
