@@ -2,14 +2,16 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
+STDIR="$(pwd)"
 TITLE="2Status"
 TEMPLATE="mat"
 STVER="$(tail -n 1 "CHANGELOG" | cut -d\  -f 1)"
 OUTDIR="out"
 LOGDIR="log"
-VERBOSEMODE="N"
+VERBOSEMODE="Y"
 TEMPNEW=/tmp/.2status-tempnew #provisory, real path will be created in start
 TEMPSEC=/tmp/.2status-tempsec
+TEMPALE=/tmp/.2status-tempale # Alerts
 NH1PACK="https://codeberg.org/attachments/7416b0f6-5daa-4b53-9283-b5d6f5fc419b" # 1.4.2
 BUILDER="2Status $STVER"
 BOT_TELEGRAM="" # telegram group
@@ -162,14 +164,14 @@ yes_or_no() {
 _2verb() {
     if [ "$VERBOSEMODE" = "Y" ]
     then
-        echo
-        echo "Title $TITLE"
-        echo "Template $TEMPLATE"
-        echo "Version $STVER"
-        echo "Output dir $OUTDIR"
-        echo "Sections $SECTIONS"
-        echo "Entries $ENTRIES"
-        echo ">>> $*"        
+        echo >&2
+        echo "Title $TITLE" >&2
+        echo "Template $TEMPLATE" >&2
+        echo "Version $STVER" >&2
+        echo "Output dir $OUTDIR" >&2
+        echo "Sections $SECTIONS" >&2
+        echo "Entries $ENTRIES" >&2
+        echo ">>> $*" >&2
     fi
 }
 if $(grep -q nh1 ~/.bashrc)
@@ -213,6 +215,7 @@ _2status.start() {
     SECTIONS="Y"
     TEMPNEW="$(1temp name .html)"
     TEMPSEC="$(1temp name .vars)"
+    TEMPALE="$(1temp file .alerts)"
     mkdir -p "$OUTDIR" "$LOGDIR"
     cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$TEMPNEW"
     cp -r templates/$TEMPLATE/* "$OUTDIR/"
@@ -224,18 +227,32 @@ _2status.start() {
 # @arg $2 status 0: ok; 1: fail
 # @arg $3 int Since (if fail)
 _2status.alert() {
-    local _MSG _NOW
+    local _MSG _NOW _SERV _STA _DOW
+    _SERV=$(echo $1)
+    shift
+    _STA=$1
+    shift
+    _DOW="$*"
     _NOW="$(date "+%Y-%m-%d %H:%M")"
     if [ ! -z "$BOT_TELEGRAM" ]
     then
-        _2verb "service $1, status $2, downtime $3"
-        if [ $2 -eq 0 ]
+        _2verb "service $1, status $_STA, downtime $_DOW"
+        if [ $_STA -eq 0 ]
         then
-            _MSG="✅ Service $1 is up $_NOW after $3."
-        else    
-            _MSG="⚠️ Service $1 is down $_NOW."
+            if [ -f "$STDIR/templates/$TEMPLATE/bot-up.angel" ]
+            then
+                _MSG=$(1angel run $STDIR/templates/$TEMPLATE/bot-up.angel service="$_SERV" downtime="$_DOW")
+            else
+                _MSG="✅ Service $_SERV is up $_NOW after $DOW."
+            fi
+        else
+            if [ -f "$STDIR/templates/$TEMPLATE/bot-down.angel" ]
+            then
+                _MSG="$(1angel run $STDIR/templates/$TEMPLATE/bot-down.angel service="$_SERV")"
+            else
+                _MSG="⚠️ Service $_SERV is down $_NOW."
+            fi
         fi
-        echo "$_MSG" >&2
         1bot telegram say "$BOT_TELEGRAM" "$_MSG"
     fi
 }
@@ -247,6 +264,7 @@ _2status.alert() {
 _2status.log_it() {
     local _TESTID _STATUS _IDTOTAL _IDON _AUX _PREVIOUS
     _STATUS=$1
+    _2verb "1morph escape em $2 de $#"
     shift
     _TESTID="$(1morph escape "$*")"
     if [ ! -f "$LOGDIR/$_TESTID.2st" ]
@@ -278,13 +296,13 @@ _2status.log_it() {
             _AUX=$(_datediff $_PREVIOUS)
             _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV"
             _1db.set  "$LOGDIR" "down" "$_TESTID" "$(date -d @$_PREVIOUS "+%Y-%m-%d_%H:%M")" $_AUX
-            _2status.alert "$_TESTID" 0 $_AUX
+            echo $_TESTID 0 $_AUX >> $TEMPALE
         fi
     else
         if [ $_PREVIOUS -eq 0 ]
         then
             _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV" $(_now)
-            _2status.alert "$_TESTID" 1
+            echo $_TESTID 1 >> $TEMPALE
         else
             echo "$_PREVIOUS"
             return 0
@@ -367,6 +385,7 @@ _2status.entry() {
         HT="$PAGE"
     fi
 
+    _2verb "Stat $STAT, Page $PAGE, Epage $EPAGE"
     DT="$(_2status.log_it "$STAT" "$PAGE")"
     if [ "$STAT" = "0" ]
     then
@@ -595,3 +614,13 @@ else
 fi
 
 rm "$TEMPSEC"*
+
+TOTAL=$(wc -l < $TEMPALE)
+for I in $(seq $TOTAL)
+do
+    LINE="$(sed -n "${I}p" $TEMPALE)"
+    _2status.alert $LINE
+    sleep 2
+done
+
+rm $TEMPALE
