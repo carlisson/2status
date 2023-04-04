@@ -1,0 +1,10 @@
+<li class="collection-item blue-grey darken-4">
+    <div class="collapsible-header blue-grey darken-4 white-text">
+        <b class="secondary-content"><i class="material-icons white-text">check_circle</i></b>
+        -=[page]=-
+    </div>
+    <div class="collapsible-body">
+        <img src="-=[chart]=-" width="100%">
+    </div>
+</li>
+ 
