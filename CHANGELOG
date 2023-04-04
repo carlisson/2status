@@ -36,3 +36,4 @@
 0.9c1  2023-04-03: using 1temp; better output strategy
 0.9c2  2023-04-03: if checking fail, try again X times
 0.9c3  2023-04-03: using 1angel for bot messages
+0.9c4  2023-04-03: new option ATTEMPTS on configuration

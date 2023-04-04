@@ -1,6 +1,7 @@
 OUTDIR|out
 TITLE|2Status Page
 TEMPLATE|mat
+ATTEMPTS|1
 BOT|telegram|teste
 
 HEAD|Hosts

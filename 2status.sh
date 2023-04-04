@@ -8,14 +8,14 @@ TEMPLATE="mat"
 STVER="$(tail -n 1 "CHANGELOG" | cut -d\  -f 1)"
 OUTDIR="out"
 LOGDIR="log"
-VERBOSEMODE="Y"
+VERBOSEMODE="N"
 TEMPNEW=/tmp/.2status-tempnew #provisory, real path will be created in start
 TEMPSEC=/tmp/.2status-tempsec
 TEMPALE=/tmp/.2status-tempale # Alerts
 NH1PACK="https://codeberg.org/attachments/7416b0f6-5daa-4b53-9283-b5d6f5fc419b" # 1.4.2
 BUILDER="2Status $STVER"
 BOT_TELEGRAM="" # telegram group
-ATTEMPS=3 # when checking results in error, how many times to try again?
+ATTEMPS=1 # when checking results in error, how many times to try again?
 
 # Returns actal time in seconds since 1970
 _now() {
@@ -217,6 +217,7 @@ _2status.start() {
     TEMPSEC="$(1temp name .vars)"
     TEMPALE="$(1temp file .alerts)"
     mkdir -p "$OUTDIR" "$LOGDIR"
+    cp "misc/2status.ico" "$OUTDIR/favicon.ico"
     cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$TEMPNEW"
     cp -r templates/$TEMPLATE/* "$OUTDIR/"
     rm $OUTDIR/*.txt $OUTDIR/*.angel &> /dev/null
@@ -243,14 +244,14 @@ _2status.alert() {
             then
                 _MSG=$(1angel run $STDIR/templates/$TEMPLATE/bot-up.angel service="$_SERV" downtime="$_DOW")
             else
-                _MSG="✅ Service $_SERV is up $_NOW after $DOW."
+                _MSG="✅ $_SERV 👍 $_NOW ⏲️ $_DOW."
             fi
         else
             if [ -f "$STDIR/templates/$TEMPLATE/bot-down.angel" ]
             then
                 _MSG="$(1angel run $STDIR/templates/$TEMPLATE/bot-down.angel service="$_SERV")"
             else
-                _MSG="⚠️ Service $_SERV is down $_NOW."
+                _MSG="❌ $_SERV 👎 $_NOW."
             fi
         fi
         1bot telegram say "$BOT_TELEGRAM" "$_MSG"
@@ -355,7 +356,6 @@ _2status.end() {
     _2status.section_end
 
 
-    cp "misc/2status.ico" "$OUTDIR/favicon.ico"
     NOW="$(date "+%Y-%m-%d %H:%M") by 2status $STVER"
     cat "templates/$TEMPLATE/footer.txt" | sed "s/\-=\[now\]=\-/$NOW/" >> "$TEMPNEW"
 }
@@ -525,6 +525,9 @@ then
                 ;;
             TEMPLATE)
                 TEMPLATE="$PA1"
+                ;;
+            ATTEMPTS)
+                ATTEMPS="$PA1"
                 ;;
             BOT)
                 if [ "$PA1" = "telegram" ]
