@@ -377,13 +377,40 @@ _2status.check_port() {
     return 1
 }
 
-if [ -f "2status.conf" ]
+SCONF="2status.conf"
+if [ $# -gt 0 ]
+then
+    case $1 in
+        update)
+            git pull
+            1update
+            exit 0
+            ;;
+        version)
+            1banner "2status $STVER"
+            1version
+            exit 0
+            ;;
+        help)
+            echo "Options:"
+            echo "  update     Updates 2status and nh1"
+            echo "  version    Show 2status and nh1 versions"
+            echo "  help       Show this help"
+            echo "  (arq.conf) Loads this file and not 2status.conf"
+            exit 0
+            ;;
+        *.conf)
+            SCONF="$1"
+            ;;
+    esac
+fi
+
+if [ -f "$SCONF" ]
 then
     
-    for lnum in $(seq $(1line "2status.conf"))
+    for lnum in $(seq $(1line "$SCONF"))
     do
-        line=$(1line "2status.conf" $lnum)
-        echo "Analisando $line"
+        line=$(1line "$SCONF" $lnum)
 
         COM="$(echo "$line" | cut -d\| -f 1)"
         PA1="$(echo "$line" | cut -d\| -f 2)"
@@ -463,7 +490,8 @@ then
         export SECTIONS
     done
 else
-    TITLE="No 2status.conf found"
+    _1message error "No $SCONF found"
+    exit 1
 fi
 
 _2status.end
