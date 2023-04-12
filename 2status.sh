@@ -12,7 +12,7 @@ VERBOSEMODE="N"
 TEMPNEW=/tmp/.2status-tempnew #provisory, real path will be created in start
 TEMPSEC=/tmp/.2status-tempsec
 TEMPALE=/tmp/.2status-tempale # Alerts
-NH1PACK="https://codeberg.org/attachments/7416b0f6-5daa-4b53-9283-b5d6f5fc419b" # 1.4.2
+NH1PACK="https://codeberg.org/attachments/0da5708e-3c0d-4f6c-a5b5-75aa8641e467" # 1.4.3
 BUILDER="2Status $STVER"
 BOT_TELEGRAM="" # telegram group
 ATTEMPS=1 # when checking results in error, how many times to try again?
@@ -20,133 +20,6 @@ ATTEMPS=1 # when checking results in error, how many times to try again?
 # Returns actal time in seconds since 1970
 _now() {
     date +%s
-}
-
-# Returns seconds diff in human legible
-# @arg 1 int Difference in seconds
-# @arg 2 int abbreviat? 0: yes; 1: no (default)
-_datediff() {
-    local _AUX _ABR _SEC _MIN _HOU _DAY _WEE _YEA
-    _AUX=$1
-    if [ $((_AUX)) -le 0 ]
-    then
-        return 1
-    fi
-    _AUX=$(( $(_now) - _AUX ))
-    if [ $((_AUX)) -le 0 ]
-    then
-        return 2
-    fi
-    case $# in
-        1)
-            _ABR=1
-            ;;
-        2)
-            _ABR=$2
-            if [ $((_ABR)) -lt 0 -o $((_ABR)) -gt 1 ]
-            then
-                return 3
-            fi
-            ;;
-        *)
-            return 4
-    esac
-    if [ $_AUX -gt 220752000 ] # 1 year
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            _1text "+1y"
-            return 0
-        else
-            if [ $_AUX -ge 441504000 ]
-            then
-                printf "$(_1text "%s years") " $((_AUX / 220752000))
-            else
-                printf "$(_1text "%s year") " $((_AUX / 220752000))
-            fi
-            _AUX=$((_AUX % 220752000))
-        fi
-    fi
-    if [ $_AUX -gt 604800 ] # 1 week
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            printf "$(_1text "%sw")" $((_AUX / 604800))
-            return 0
-        else
-            if [ $_AUX -ge 1209600 ]
-            then
-                printf "$(_1text "%s weeks") " $((_AUX / 604800))
-            else
-                printf "$(_1text "%s week") " $((_AUX / 604800))
-            fi
-            _AUX=$((_AUX % 604800))
-        fi
-    fi
-    if [ $_AUX -gt 86400 ] # 1 day
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            printf "$(_1text "%sd")" $((_AUX / 86400))
-            return 0
-        else
-            if [ $_AUX -ge 172800 ]
-            then
-                printf "$(_1text "%s days") " $((_AUX / 86400))
-            else
-                printf "$(_1text "%s day") " $((_AUX / 86400))
-            fi
-            _AUX=$((_AUX % 86400))
-        fi
-    fi
-    if [ $_AUX -gt 3600 ] # 1 hour
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            printf "$(_1text "%sh")" $((_AUX / 3600))
-            return 0
-        else
-            if [ $_AUX -ge 7200 ]
-            then
-                printf "$(_1text "%s hours") " $((_AUX / 3600))
-            else
-                printf "$(_1text "%s hour") " $((_AUX / 3600))
-            fi
-            _AUX=$((_AUX % 3600))
-        fi
-    fi
-    if [ $_AUX -gt 60 ] # 1 min
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            printf "$(_1text "%smin")" $((_AUX / 60))
-            return 0
-        else
-            if [ $_AUX -ge 120 ]
-            then
-                printf "$(_1text "%s minutes") " $((_AUX / 60))
-            else
-                printf "$(_1text "%s minute") " $((_AUX / 60))
-            fi
-            _AUX=$((_AUX % 60))
-        fi
-    fi
-    if [ $_AUX -gt 0 ] # 1 min
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            printf "$(_1text "%ss")" $_AUX
-            return 0
-        else
-            if [ $_AUX -gt 1 ]
-            then
-                printf "$(_1text "%s seconds") " $_AUX
-            else
-                printf "$(_1text "%s second") " $_AUX
-            fi
-        fi
-    fi
-    return 0
 }
 
 yes_or_no() {
@@ -174,6 +47,7 @@ _2verb() {
         echo ">>> $*" >&2
     fi
 }
+
 if $(grep -q nh1 ~/.bashrc)
 then
     eval "$(grep nh1 "$HOME/.bashrc")"
@@ -294,7 +168,7 @@ _2status.log_it() {
         _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDON" $_AUX
         if [ $_PREVIOUS -gt 0 ]
         then
-            _AUX=$(_datediff $_PREVIOUS)
+            _AUX=$(1elapsed $_PREVIOUS)
             _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV"
             _1db.set  "$LOGDIR" "down" "$_TESTID" "$(date -d @$_PREVIOUS "+%Y-%m-%d_%H:%M")" $_AUX
             echo $_TESTID 0 $_AUX >> $TEMPALE
@@ -392,7 +266,7 @@ _2status.entry() {
         cat "templates/$TEMPLATE/entry-on.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
         echo "entrangel=entry-on.angel page=$PAGE chart=$EPAGE.svg" >> $TEMPSEC.$SECTIONS
     else
-        DT="$(_datediff $DT 0)"
+        DT="$(1elapsed $DT 0)"
         cat "templates/$TEMPLATE/entry-off.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
         echo "entrangel=entry-off.angel page=$PAGE chart=$EPAGE.svg downtime=$DT" >> $TEMPSEC.$SECTIONS
     fi
