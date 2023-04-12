@@ -2,6 +2,7 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
+STDIR="$(pwd)"
 TITLE="2Status"
 TEMPLATE="mat"
 STVER="$(tail -n 1 "CHANGELOG" | cut -d\  -f 1)"
@@ -10,140 +11,15 @@ LOGDIR="log"
 VERBOSEMODE="N"
 TEMPNEW=/tmp/.2status-tempnew #provisory, real path will be created in start
 TEMPSEC=/tmp/.2status-tempsec
-NH1PACK="https://codeberg.org/attachments/7416b0f6-5daa-4b53-9283-b5d6f5fc419b" # 1.4.2
+TEMPALE=/tmp/.2status-tempale # Alerts
+NH1PACK="https://codeberg.org/attachments/0da5708e-3c0d-4f6c-a5b5-75aa8641e467" # 1.4.3
 BUILDER="2Status $STVER"
 BOT_TELEGRAM="" # telegram group
+ATTEMPS=1 # when checking results in error, how many times to try again?
 
-# Returns actal time in seconds since 1970
+# Returns actual time in seconds since 1970
 _now() {
     date +%s
-}
-
-# Returns seconds diff in human legible
-# @arg 1 int Difference in seconds
-# @arg 2 int abbreviat? 0: yes; 1: no (default)
-_datediff() {
-    local _AUX _ABR _SEC _MIN _HOU _DAY _WEE _YEA
-    _AUX=$1
-    if [ $((_AUX)) -le 0 ]
-    then
-        return 1
-    fi
-    _AUX=$(( $(_now) - _AUX ))
-    if [ $((_AUX)) -le 0 ]
-    then
-        return 2
-    fi
-    case $# in
-        1)
-            _ABR=1
-            ;;
-        2)
-            _ABR=$2
-            if [ $((_ABR)) -lt 0 -o $((_ABR)) -gt 1 ]
-            then
-                return 3
-            fi
-            ;;
-        *)
-            return 4
-    esac
-    if [ $_AUX -gt 220752000 ] # 1 year
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            _1text "+1y"
-            return 0
-        else
-            if [ $_AUX -ge 441504000 ]
-            then
-                printf "$(_1text "%s years") " $((_AUX / 220752000))
-            else
-                printf "$(_1text "%s year") " $((_AUX / 220752000))
-            fi
-            _AUX=$((_AUX % 220752000))
-        fi
-    fi
-    if [ $_AUX -gt 604800 ] # 1 week
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            printf "$(_1text "%sw")" $((_AUX / 604800))
-            return 0
-        else
-            if [ $_AUX -ge 1209600 ]
-            then
-                printf "$(_1text "%s weeks") " $((_AUX / 604800))
-            else
-                printf "$(_1text "%s week") " $((_AUX / 604800))
-            fi
-            _AUX=$((_AUX % 604800))
-        fi
-    fi
-    if [ $_AUX -gt 86400 ] # 1 day
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            printf "$(_1text "%sd")" $((_AUX / 86400))
-            return 0
-        else
-            if [ $_AUX -ge 172800 ]
-            then
-                printf "$(_1text "%s days") " $((_AUX / 86400))
-            else
-                printf "$(_1text "%s day") " $((_AUX / 86400))
-            fi
-            _AUX=$((_AUX % 86400))
-        fi
-    fi
-    if [ $_AUX -gt 3600 ] # 1 hour
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            printf "$(_1text "%sh")" $((_AUX / 3600))
-            return 0
-        else
-            if [ $_AUX -ge 7200 ]
-            then
-                printf "$(_1text "%s hours") " $((_AUX / 3600))
-            else
-                printf "$(_1text "%s hour") " $((_AUX / 3600))
-            fi
-            _AUX=$((_AUX % 3600))
-        fi
-    fi
-    if [ $_AUX -gt 60 ] # 1 min
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            printf "$(_1text "%smin")" $((_AUX / 60))
-            return 0
-        else
-            if [ $_AUX -ge 120 ]
-            then
-                printf "$(_1text "%s minutes") " $((_AUX / 60))
-            else
-                printf "$(_1text "%s minute") " $((_AUX / 60))
-            fi
-            _AUX=$((_AUX % 60))
-        fi
-    fi
-    if [ $_AUX -gt 0 ] # 1 min
-    then
-        if [ $_ABR -eq 0 ]
-        then
-            printf "$(_1text "%ss")" $_AUX
-            return 0
-        else
-            if [ $_AUX -gt 1 ]
-            then
-                printf "$(_1text "%s seconds") " $_AUX
-            else
-                printf "$(_1text "%s second") " $_AUX
-            fi
-        fi
-    fi
-    return 0
 }
 
 yes_or_no() {
@@ -161,16 +37,17 @@ yes_or_no() {
 _2verb() {
     if [ "$VERBOSEMODE" = "Y" ]
     then
-        echo
-        echo "Title $TITLE"
-        echo "Template $TEMPLATE"
-        echo "Version $STVER"
-        echo "Output dir $OUTDIR"
-        echo "Sections $SECTIONS"
-        echo "Entries $ENTRIES"
-        echo ">>> $*"        
+        echo >&2
+        echo "Title $TITLE" >&2
+        echo "Template $TEMPLATE" >&2
+        echo "Version $STVER" >&2
+        echo "Output dir $OUTDIR" >&2
+        echo "Sections $SECTIONS" >&2
+        echo "Entries $ENTRIES" >&2
+        echo ">>> $*" >&2
     fi
 }
+
 if $(grep -q nh1 ~/.bashrc)
 then
     eval "$(grep nh1 "$HOME/.bashrc")"
@@ -206,19 +83,15 @@ fi
 SECTIONS="N"
 ENTRIES=0
 
-# @description Returns a temp file name
-# @arg 1 string File type
-_2status.tmpfile() {
-    echo "$OUTDIR/index-$(1dice 10000).$1"
-}
-
 # @description Start printing HTML page
 _2status.start() {
     _2verb "start"
     SECTIONS="Y"
-    TEMPNEW="$(_2status.tmpfile html)"
-    TEMPSEC="$(_2status.tmpfile vars)"
+    TEMPNEW="$(1temp name .html)"
+    TEMPSEC="$(1temp name .vars)"
+    TEMPALE="$(1temp file .alerts)"
     mkdir -p "$OUTDIR" "$LOGDIR"
+    cp "misc/2status.ico" "$OUTDIR/favicon.ico"
     cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$TEMPNEW"
     cp -r templates/$TEMPLATE/* "$OUTDIR/"
     rm $OUTDIR/*.txt $OUTDIR/*.angel &> /dev/null
@@ -229,18 +102,32 @@ _2status.start() {
 # @arg $2 status 0: ok; 1: fail
 # @arg $3 int Since (if fail)
 _2status.alert() {
-    local _MSG _NOW
+    local _MSG _NOW _SERV _STA _DOW
+    _SERV=$(echo $1)
+    shift
+    _STA=$1
+    shift
+    _DOW="$*"
     _NOW="$(date "+%Y-%m-%d %H:%M")"
     if [ ! -z "$BOT_TELEGRAM" ]
     then
-        _2verb "service $1, status $2, downtime $3"
-        if [ $2 -eq 0 ]
+        _2verb "service $1, status $_STA, downtime $_DOW"
+        if [ $_STA -eq 0 ]
         then
-            _MSG="✅ Service $1 is up $_NOW after $3."
-        else    
-            _MSG="⚠️ Service $1 is down $_NOW."
+            if [ -f "$STDIR/templates/$TEMPLATE/bot-up.angel" ]
+            then
+                _MSG=$(1angel run $STDIR/templates/$TEMPLATE/bot-up.angel service="$_SERV" downtime="$_DOW")
+            else
+                _MSG="✅ $_SERV 👍 $_NOW ⏲️ $_DOW."
+            fi
+        else
+            if [ -f "$STDIR/templates/$TEMPLATE/bot-down.angel" ]
+            then
+                _MSG="$(1angel run $STDIR/templates/$TEMPLATE/bot-down.angel service="$_SERV")"
+            else
+                _MSG="❌ $_SERV 👎 $_NOW."
+            fi
         fi
-        echo "$_MSG" >&2
         1bot telegram say "$BOT_TELEGRAM" "$_MSG"
     fi
 }
@@ -252,6 +139,7 @@ _2status.alert() {
 _2status.log_it() {
     local _TESTID _STATUS _IDTOTAL _IDON _AUX _PREVIOUS
     _STATUS=$1
+    _2verb "1morph escape em $2 de $#"
     shift
     _TESTID="$(1morph escape "$*")"
     if [ ! -f "$LOGDIR/$_TESTID.2st" ]
@@ -280,16 +168,16 @@ _2status.log_it() {
         _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDON" $_AUX
         if [ $_PREVIOUS -gt 0 ]
         then
-            _AUX=$(_datediff $_PREVIOUS)
+            _AUX=$(1elapsed $_PREVIOUS)
             _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV"
             _1db.set  "$LOGDIR" "down" "$_TESTID" "$(date -d @$_PREVIOUS "+%Y-%m-%d_%H:%M")" $_AUX
-            _2status.alert "$_TESTID" 0 $_AUX
+            echo $_TESTID 0 $_AUX >> $TEMPALE
         fi
     else
         if [ $_PREVIOUS -eq 0 ]
         then
             _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV" $(_now)
-            _2status.alert "$_TESTID" 1
+            echo $_TESTID 1 >> $TEMPALE
         else
             echo "$_PREVIOUS"
             return 0
@@ -342,7 +230,6 @@ _2status.end() {
     _2status.section_end
 
 
-    cp "misc/2status.ico" "$OUTDIR/favicon.ico"
     NOW="$(date "+%Y-%m-%d %H:%M") by 2status $STVER"
     cat "templates/$TEMPLATE/footer.txt" | sed "s/\-=\[now\]=\-/$NOW/" >> "$TEMPNEW"
 }
@@ -372,13 +259,14 @@ _2status.entry() {
         HT="$PAGE"
     fi
 
+    _2verb "Stat $STAT, Page $PAGE, Epage $EPAGE"
     DT="$(_2status.log_it "$STAT" "$PAGE")"
     if [ "$STAT" = "0" ]
     then
         cat "templates/$TEMPLATE/entry-on.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
         echo "entrangel=entry-on.angel page=$PAGE chart=$EPAGE.svg" >> $TEMPSEC.$SECTIONS
     else
-        DT="$(_datediff $DT 0)"
+        DT="$(1elapsed $DT 0)"
         cat "templates/$TEMPLATE/entry-off.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
         echo "entrangel=entry-off.angel page=$PAGE chart=$EPAGE.svg downtime=$DT" >> $TEMPSEC.$SECTIONS
     fi
@@ -439,14 +327,17 @@ _2status.make_chart() {
 _2status.check_host() {
     local PA1="$1"
     local PA2="$2"
-    local STAT
-    if $(1ison -q "$PA2")
-    then
-        STAT="0"
-    else
-        STAT="1"
-    fi
-    _2status.entry "$PA1" "$PA2" "$STAT"
+    local I
+    for I in $(seq $ATTEMPS)
+    do
+        if $(1ison -q "$PA2")
+        then
+            _2status.entry "$PA1" "$PA2" "0"
+            return 0
+        fi
+    done
+    _2status.entry "$PA1" "$PA2" "1"
+    return 1
 }
 
 # @description Check if given service returns wanted HTTP status
@@ -454,14 +345,17 @@ _2status.check_host() {
 # @arg $2 string URL
 # @arg $3 int Wanted HTTP status
 _2status.check_web() {
-    local STAT
-    if [ $(1httpstatus "$2") -eq $3 ]
-    then
-        STAT="0"
-    else
-        STAT="1"
-    fi
-    _2status.entry "$1" "$2" "$STAT"
+    local I
+    for I in $(seq $ATTEMPS)
+    do
+        if [ $(1httpstatus "$2") -eq $3 ]
+        then
+            _2status.entry "$1" "$2" "0"
+            return 0
+        fi
+    done
+    _2status.entry "$1" "$2" "1"
+    return 1
 }
 
 # @description Check if given port is open
@@ -469,25 +363,55 @@ _2status.check_web() {
 # @arg $2 string IP address
 # @arg $3 int Port number
 _2status.check_port() {
-    $(1ports "$2" $3 >& /dev/null)
-    if [ $? -eq 0 ]
-    then
-        STAT="0"
-    else
-        STAT="1"
-    fi
-    _2status.entry "$1" "$2" "$STAT"
+    local I
+    for I in $(seq $ATTEMPS)
+    do
+        $(1ports "$2" $3 >& /dev/null)
+        if [ $? -eq 0 ]
+        then
+            _2status.entry "$1" "$2" "0"
+            return 0
+        fi
+    done
+    _2status.entry "$1" "$2" "1"
+    return 1
 }
 
-PIFS=$IFS
-IFS=$'\n'
+SCONF="2status.conf"
+if [ $# -gt 0 ]
+then
+    case $1 in
+        update)
+            git pull
+            1update
+            exit 0
+            ;;
+        version)
+            1banner "2status $STVER"
+            1version
+            exit 0
+            ;;
+        help)
+            echo "Options:"
+            echo "  update     Updates 2status and nh1"
+            echo "  version    Show 2status and nh1 versions"
+            echo "  help       Show this help"
+            echo "  (arq.conf) Loads this file and not 2status.conf"
+            exit 0
+            ;;
+        *.conf)
+            SCONF="$1"
+            ;;
+    esac
+fi
 
-if [ -f "2status.conf" ]
+if [ -f "$SCONF" ]
 then
     
-    while read line
+    for lnum in $(seq $(1line "$SCONF"))
     do
-        line=$(echo $line | tr '^' 'n')
+        line=$(1line "$SCONF" $lnum)
+
         COM="$(echo "$line" | cut -d\| -f 1)"
         PA1="$(echo "$line" | cut -d\| -f 2)"
         PA2="$(echo "$line" | cut -d\| -f 3)"
@@ -501,6 +425,9 @@ then
                 ;;
             TEMPLATE)
                 TEMPLATE="$PA1"
+                ;;
+            ATTEMPTS)
+                ATTEMPS="$PA1"
                 ;;
             BOT)
                 if [ "$PA1" = "telegram" ]
@@ -524,12 +451,10 @@ then
                 if [ -f "$_1NETLOCAL/$PA2.hosts" ]
                 then
                     _2status.section "$PA1"
-                    TOTAL=$(cat "$_1NETLOCAL/$PA2.hosts" | wc -l)
-                    COUNT=0
-                    while [ $COUNT -lt $TOTAL ]
+                    
+                    for COUNT in $(seq $(1line "$_1NETLOCAL/$PA2.hosts"))
                     do
-                        COUNT=$((COUNT+1))
-                        HLIN=$(sed -n "$COUNT"p < "$_1NETLOCAL/$PA2.hosts")
+                        HLIN=$(1line "$_1NETLOCAL/$PA2.hosts" $COUNT)
                         HNAM=$(echo $HLIN | sed 's/\(.*\)=\(.*\)/\1/')
                         MYIP=$(echo $HLIN | cut -f 2 -d "=" | cut -f 1 -d " ")
                         if [ $? -eq 0 ]
@@ -545,12 +470,10 @@ then
                 if [ -f "$_1NETLOCAL/$PA2.hosts" ]
                 then
                     _2status.section "$PA1"
-                    TOTAL=$(cat "$_1NETLOCAL/$PA2.hosts" | wc -l)
-                    COUNT=0
-                    while [ $COUNT -lt $TOTAL ]
+
+                    for COUNT in $(seq $(1line "$_1NETLOCAL/$PA2.hosts"))
                     do
-                        COUNT=$((COUNT+1))
-                        HLIN=$(sed -n "$COUNT"p < "$_1NETLOCAL/$PA2.hosts")
+                        HLIN=$(1line "$_1NETLOCAL/$PA2.hosts" $COUNT)
                         HNAM=$(echo $HLIN | sed 's/\(.*\)=\(.*\)/\1/')
                         MYIP=$(echo $HLIN | cut -f 2 -d "=" | cut -f 1 -d " ")
                         if [ $? -eq 0 ]
@@ -565,9 +488,10 @@ then
         esac
         export ENTRIES
         export SECTIONS
-    done <<< $(cat "2status.conf" | tr 'n' '^')
+    done
 else
-    TITLE="No 2status.conf found"
+    _1message error "No $SCONF found"
+    exit 1
 fi
 
 _2status.end
@@ -575,17 +499,26 @@ _2status.end
 cat "$TEMPNEW" > "$OUTDIR/previous.html"
 rm "$TEMPNEW"
 
-IFS=$PIFS
-
 if [ -f "templates/$TEMPLATE/main.angel" ]
 then
     _1ANGELBUILDER="$BUILDER"
     pushd "templates/$TEMPLATE" >& /dev/null
-    _2verb "1angel main.angel run title=\"$TITLE\" sections=\"$TEMPSEC\" > $OUTDIR/index.html"
-    1angel run main.angel title="$TITLE" sections="$TEMPSEC" > $OUTDIR/index.html
+    _2verb "1angel main.angel run title=\"$TITLE\" sections=\"$TEMPSEC\" > $OUTDIR/angel.html"
+    1angel run main.angel title="$TITLE" sections="$TEMPSEC" > $OUTDIR/angel.html
     popd >& /dev/null
+    mv "$OUTDIR/angel.html" $OUTDIR/index.html
 else
     cp "$OUTDIR/previous.html" "$OUTDIR/index.html"
 fi
 
 rm "$TEMPSEC"*
+
+TOTAL=$(wc -l < $TEMPALE)
+for I in $(seq $TOTAL)
+do
+    LINE="$(sed -n "${I}p" $TEMPALE)"
+    _2status.alert $LINE
+    sleep 2
+done
+
+rm $TEMPALE

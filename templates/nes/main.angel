@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="60">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<title>-=[title]=-</title>
+    <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+    <link href="https://unpkg.com/nes.css/css/nes.css" rel="stylesheet" />
+
+    <style>
+      .nav-brand { border-bottom: 5px solid #000; margin-bottom: 5px; text-align: center}
+      .showcase { margin: 5px;}
+      .showcode { float: right; }
+    </style>
+<body>
+
+    <div id="nescss">
+      <header :class="{ sticky: scrollPos > 50 }">
+        <div class="container">
+          <div class="nav-brand">
+            <h1><i class="nes-icon star"></i> -=[title]=-</h1>
+            <p><i class="nes-icon heart"></i> Online. <i class="nes-icon heart is-empty"></i> Off-line.</p>
+          </div>
+      </header>
+
+-=(sections section.angel)=-
+
+  <div class="nes-container is-rounded is-dark">
+    <p>-=!now!=-, by -=!builder!=-. <a href="https://codeberg.org/bardo/2status">2 Status Project</a>
+     with <a href="https://github.com/nostalgic-css/NES.css">NES.css</a>
+</p>
+  </div>
+
+</div>
+<script>
+document.chartcounter=0
+  document.querySelectorAll('.samplecode').forEach(function(el) {
+    document.chartcounter = document.chartcounter + 1;
+    el.id = 'areachart' + document.chartcounter;
+    el.style.display = 'none';
+  });
+  document.chartcounter=0
+  document.querySelectorAll('.showcode').forEach(function(el) {
+    document.chartcounter = document.chartcounter + 1;
+    el.id = 'chart' + document.chartcounter;
+  });
+  document.querySelectorAll('.showcode').forEach(function(el) {
+    el.addEventListener("click", function() {
+      targ = 'area' + this.id;
+      console.log('Clicado para o ' + targ);
+      if (document.getElementById(targ).style.display == 'none') {
+        document.getElementById(targ).style.display = 'block';
+      } else {
+        document.getElementById(targ).style.display = 'none';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

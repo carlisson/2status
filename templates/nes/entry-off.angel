@@ -1,0 +1,12 @@
+<section class="showcase" >
+    <section class="nes-container with-title">
+        <h3 class="title nes-text is-error">-=[page]=-</h3>
+        <pclass="note">
+            <i class="nes-icon is-large heart is-empty"></i>
+            <button type="button" class="nes-btn is-primary showcode">+</button>
+       </p>
+        <section class="samplecode">
+            <pre><code class="html"><img src="-=[chart]=-" width="100%" style="image-rendering: pixelated;"></code></pre>
+        </section>
+    </section>
+</section>
