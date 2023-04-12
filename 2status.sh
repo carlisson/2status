@@ -17,7 +17,7 @@ BUILDER="2Status $STVER"
 BOT_TELEGRAM="" # telegram group
 ATTEMPS=1 # when checking results in error, how many times to try again?
 
-# Returns actal time in seconds since 1970
+# Returns actual time in seconds since 1970
 _now() {
     date +%s
 }
@@ -377,15 +377,14 @@ _2status.check_port() {
     return 1
 }
 
-PIFS=$IFS
-IFS=$'\n'
-
 if [ -f "2status.conf" ]
 then
     
-    while read line
+    for lnum in $(seq $(1line "2status.conf"))
     do
-        line=$(echo $line | tr '^' 'n')
+        line=$(1line "2status.conf" $lnum)
+        echo "Analisando $line"
+
         COM="$(echo "$line" | cut -d\| -f 1)"
         PA1="$(echo "$line" | cut -d\| -f 2)"
         PA2="$(echo "$line" | cut -d\| -f 3)"
@@ -425,12 +424,10 @@ then
                 if [ -f "$_1NETLOCAL/$PA2.hosts" ]
                 then
                     _2status.section "$PA1"
-                    TOTAL=$(cat "$_1NETLOCAL/$PA2.hosts" | wc -l)
-                    COUNT=0
-                    while [ $COUNT -lt $TOTAL ]
+                    
+                    for COUNT in $(seq $(1line "$_1NETLOCAL/$PA2.hosts"))
                     do
-                        COUNT=$((COUNT+1))
-                        HLIN=$(sed -n "$COUNT"p < "$_1NETLOCAL/$PA2.hosts")
+                        HLIN=$(1line "$_1NETLOCAL/$PA2.hosts" $COUNT)
                         HNAM=$(echo $HLIN | sed 's/\(.*\)=\(.*\)/\1/')
                         MYIP=$(echo $HLIN | cut -f 2 -d "=" | cut -f 1 -d " ")
                         if [ $? -eq 0 ]
@@ -446,12 +443,10 @@ then
                 if [ -f "$_1NETLOCAL/$PA2.hosts" ]
                 then
                     _2status.section "$PA1"
-                    TOTAL=$(cat "$_1NETLOCAL/$PA2.hosts" | wc -l)
-                    COUNT=0
-                    while [ $COUNT -lt $TOTAL ]
+
+                    for COUNT in $(seq $(1line "$_1NETLOCAL/$PA2.hosts"))
                     do
-                        COUNT=$((COUNT+1))
-                        HLIN=$(sed -n "$COUNT"p < "$_1NETLOCAL/$PA2.hosts")
+                        HLIN=$(1line "$_1NETLOCAL/$PA2.hosts" $COUNT)
                         HNAM=$(echo $HLIN | sed 's/\(.*\)=\(.*\)/\1/')
                         MYIP=$(echo $HLIN | cut -f 2 -d "=" | cut -f 1 -d " ")
                         if [ $? -eq 0 ]
@@ -466,7 +461,7 @@ then
         esac
         export ENTRIES
         export SECTIONS
-    done <<< $(cat "2status.conf" | tr 'n' '^')
+    done
 else
     TITLE="No 2status.conf found"
 fi
@@ -476,13 +471,11 @@ _2status.end
 cat "$TEMPNEW" > "$OUTDIR/previous.html"
 rm "$TEMPNEW"
 
-IFS=$PIFS
-
 if [ -f "templates/$TEMPLATE/main.angel" ]
 then
     _1ANGELBUILDER="$BUILDER"
     pushd "templates/$TEMPLATE" >& /dev/null
-    _2verb "1angel main.angel run title=\"$TITLE\" sections=\"$TEMPSEC\" > $OUTDIR/index.html"
+    _2verb "1angel main.angel run title=\"$TITLE\" sections=\"$TEMPSEC\" > $OUTDIR/angel.html"
     1angel run main.angel title="$TITLE" sections="$TEMPSEC" > $OUTDIR/angel.html
     popd >& /dev/null
     mv "$OUTDIR/angel.html" $OUTDIR/index.html
