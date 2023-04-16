@@ -92,7 +92,7 @@ _2status.start() {
     TEMPALE="$(1temp file .alerts)"
     mkdir -p "$OUTDIR" "$LOGDIR"
     cp "misc/2status.ico" "$OUTDIR/favicon.ico"
-    cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$TEMPNEW"
+#--    cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$TEMPNEW"
     cp -r templates/$TEMPLATE/* "$OUTDIR/"
     rm $OUTDIR/*.txt $OUTDIR/*.angel &> /dev/null
 }
@@ -203,7 +203,7 @@ _2status.section() {
     else
         _2status.section_end
     fi
-    cat "templates/$TEMPLATE/headsec.txt" | sed "s/\-=\[title\]=\-/$NAM/g" >> "$TEMPNEW"
+#--    cat "templates/$TEMPLATE/headsec.txt" | sed "s/\-=\[title\]=\-/$NAM/g" >> "$TEMPNEW"
     ENTRIES=0
     echo "group=$1 entries=$TEMPSEC.$SECTIONS" >> "$TEMPSEC"
 }
@@ -211,11 +211,11 @@ _2status.section() {
 # @description Close a section
 _2status.section_end() {
     _2verb "section end"
-    if [ $ENTRIES -eq 0 ]
-    then
-            cat "templates/$TEMPLATE/sec-empty.txt" >> "$TEMPNEW"
-    fi
-    cat "templates/$TEMPLATE/footsec.txt" >> "$TEMPNEW"
+#--    if [ $ENTRIES -eq 0 ]
+#--    then
+#--            cat "templates/$TEMPLATE/sec-empty.txt" >> "$TEMPNEW"
+#--    fi
+#--    cat "templates/$TEMPLATE/footsec.txt" >> "$TEMPNEW"
     SECTIONS=$((SECTIONS+1))
 }
 
@@ -231,7 +231,7 @@ _2status.end() {
 
 
     NOW="$(date "+%Y-%m-%d %H:%M") by 2status $STVER"
-    cat "templates/$TEMPLATE/footer.txt" | sed "s/\-=\[now\]=\-/$NOW/" >> "$TEMPNEW"
+#--    cat "templates/$TEMPLATE/footer.txt" | sed "s/\-=\[now\]=\-/$NOW/" >> "$TEMPNEW"
 }
 
 # @description Prints a line
@@ -263,11 +263,11 @@ _2status.entry() {
     DT="$(_2status.log_it "$STAT" "$PAGE")"
     if [ "$STAT" = "0" ]
     then
-        cat "templates/$TEMPLATE/entry-on.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
+#--        cat "templates/$TEMPLATE/entry-on.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
         echo "entrangel=entry-on.angel page=$PAGE chart=$EPAGE.svg" >> $TEMPSEC.$SECTIONS
     else
         DT="$(1elapsed $DT 0)"
-        cat "templates/$TEMPLATE/entry-off.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
+#--        cat "templates/$TEMPLATE/entry-off.txt" | sed "s/\-=\[page\]=\-/$PAGE/" | sed "s/\-=\[chart\]=\-/$EPAGE.svg/" >> "$TEMPNEW"
         echo "entrangel=entry-off.angel page=$PAGE chart=$EPAGE.svg downtime=$DT" >> $TEMPSEC.$SECTIONS
     fi
     
@@ -504,11 +504,17 @@ then
     _1ANGELBUILDER="$BUILDER"
     pushd "templates/$TEMPLATE" >& /dev/null
     _2verb "1angel main.angel run title=\"$TITLE\" sections=\"$TEMPSEC\" > $OUTDIR/angel.html"
+        #1banner 1
+        #cat $TEMPSEC.1
+        #1banner 2
+        #cat $TEMPSEC.2
+        #1banner MAIN
+        #cat $TEMPSEC
     1angel run main.angel title="$TITLE" sections="$TEMPSEC" > $OUTDIR/angel.html
     popd >& /dev/null
     mv "$OUTDIR/angel.html" $OUTDIR/index.html
-else
-    cp "$OUTDIR/previous.html" "$OUTDIR/index.html"
+#--else
+#--    cp "$OUTDIR/previous.html" "$OUTDIR/index.html"
 fi
 
 rm "$TEMPSEC"*

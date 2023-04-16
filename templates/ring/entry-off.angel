@@ -1,0 +1,3 @@
+<li role="button" class="secondary" onclick="goModal(false, '-=[page]=-', '-=[chart]=-')">
+    -=[page]=-
+</li>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="60">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="pico.min.css">
+    <link rel="stylesheet" href="main.css">
+    <script src="modal.js"></script>
+    <title>-=[title]=-</title>
+</head>
+  <body>
+
+    <!-- Modal -->
+    <dialog id="modal-graph">
+        <article id="modal-article" role="button">
+            <a href="#close"
+                aria-label="Close"
+                class="close"
+                data-target="modal-graph"
+                onClick="toggleModal(event)">
+            </a>
+            <h3 id="modal-title">@Host</h3>
+            <img id="modal-chart" src="blank.jpg">
+            <footer>
+                <a href="#cancel"
+                    role="button"
+                    class="secondary"
+                    data-target="modal-graph"
+                    onClick="toggleModal(event)">
+                    Ok
+                </a>
+          </footer>
+        </article>
+    </dialog>
+  
+      <nav>
+          <strong>-=[title]=-</strong>
+      </nav>
+    <main class="container">
+-=(sections section.angel)=-
+    </main>
+
+
+<button id="modal-button" class="hidden"
+  data-target="modal-graph"
+  onClick="toggleModal(event)">
+  Launch modal
+</button>
+
+
+    <footer role="button" class="contrast">
+        <div class="container">
+          Generated at <b>-=!now!=-</b> by -=!builder!=-
+          <a class="grey-text text-lighten-4 right" href="https://codeberg.org/bardo/2status">2 Status Project</a>
+        </div>
+    </footer>
+</body>
+</html>
+   <script>
+        var tmodal = document.getElementById("modal-graph");
+        var mtitle = document.getElementById("modal-title");
+        var mchart = document.getElementById("modal-chart");
+        var mbutton = document.getElementById("modal-button");
+        var martic = document.getElementById("modal-article");
+        function goModal(stat, title, chart) {
+            if (stat) {
+                mtitle.innerHTML = title + " (Online)";
+                martic.className = "";
+            } else {
+                mtitle.innerHTML = title + "(Offline)";
+                martic.className = "secondary";
+            }
+            mchart.src = chart;
+            openModal(tmodal);
+        }
+    </script>
+
+</body>
+</html>
