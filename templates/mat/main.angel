@@ -13,6 +13,9 @@
       .inline-icon {
         vertical-align: bottom;
       }
+      .collection .collection-item.active .collapsible-header {
+        color: #000000;
+      }
     </style>
 <body>
 
