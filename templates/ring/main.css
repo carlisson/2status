@@ -541,5 +541,12 @@ nav {
     color: #ffffff;
 }
 dialog article {
-    overflow: hidden;
+    background-color: var(--primary);
+    /*    overflow: hidden;*/
+}
+dialog article.secondary {
+    background-color: var(--secondary);
+}
+dialog article .close {
+    background-color: #ffffff;
 }

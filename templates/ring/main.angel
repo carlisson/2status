@@ -5,6 +5,7 @@
     <meta http-equiv="refresh" content="60">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/1.35.0/iconfont/tabler-icons.min.css" integrity="sha512-tpsEzNMLQS7w9imFSjbEOHdZav3/aObSESAL1y5jyJDoICFF2YwEdAHOPdOr1t+h8hTzar0flphxR76pd0V1zQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="pico.min.css">
     <link rel="stylesheet" href="main.css">
     <script src="modal.js"></script>
@@ -14,7 +15,7 @@
 
     <!-- Modal -->
     <dialog id="modal-graph">
-        <article id="modal-article" role="button">
+        <article id="modal-article">
             <a href="#close"
                 aria-label="Close"
                 class="close"
@@ -52,6 +53,9 @@
 
     <footer role="button" class="contrast">
         <div class="container">
+            <i role="button" class="ti ti-thumb-up"></i> On-line -
+            <i role="button" class="secondary ti ti-thumb-down"></i> Off-line
+            <br>
           Generated at <b>-=!now!=-</b> by -=!builder!=-
           <a class="grey-text text-lighten-4 right" href="https://codeberg.org/bardo/2status">2 Status Project</a>
         </div>
