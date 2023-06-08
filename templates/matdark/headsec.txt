@@ -1,4 +1,0 @@
-    <div class="col s12 m6 l4 xl3">
-      <ul class="collection with-header collapsible">
-        <li class="collection-header blue-grey"><h4>-=[title]=-</h4></li>
-

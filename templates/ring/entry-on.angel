@@ -1,3 +1,0 @@
-<li role="button" onclick="goModal(true, '-=[page]=-', '-=[chart]=-')">
-      <i class="ti ti-thumb-up"></i> -=[page]=-
-</li>
