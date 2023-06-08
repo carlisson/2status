@@ -47,8 +47,5 @@
 0.9d2  2023-04-16: new theme ring using Pico CSS framework
 0.9d3  2023-04-16: Improved theme ring
 0.9d4  2023-04-16: Improved theme ring
-<<<<<<< HEAD
-0.9d5  2023-06-08: Created hotfile (2hot)
-=======
 0.9d5  2023-05-12: command COM to test custom shell command
->>>>>>> 6821f7aba6e5bdc2361b8226165ce05a895d36e9
+0.9d6  2023-06-08: Created hotfile (2h)
