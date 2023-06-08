@@ -1,0 +1,24 @@
+OUTDIR|../2status-doc
+TITLE|2Status
+LOGO|../2status/misc/2status.png
+ACTION|Project|https://codeberg.org/bardo/2status
+TEMPLATE|tab
+COLORS|#fd5400|#bb8dea|#303030|#ffffff
+
+INTROSECTION|Status Page|../2status/misc/2status-0.8-mat.png|2Status is a service/host status page, build with NH1. It generates static pages using simple shell commands. Using cron and any web server, you can bring up a public, simple and functional status page.
+
+MENUSECTION|Examples
+BUTTON|2Status Cordéis|https://status.cordeis.com|link
+BUTTON|Status - UFAL Arapiraca|http://status.arapiraca.ufal.br|link
+
+CARDSECTION|Themes
+ICARD|Mat|Build with MaterializeCSS|../2status/misc/2status-0.8-mat.png|2status-0.8-mat.png
+ICARD|Matdark|Dark version of mat theme|../2status/misc/2status-0.8-matdark.png|2status-0.8-matdark.png
+ICARD|NES|Build with NES.CSS|../2status/misc/2status-0.8-nes.png|2status-0.8-nes.png
+
+MENUSECTION|Get it now!
+HBUTTON|Codeberg|https://codeberg.org/bardo/2status|code
+BUTTON|Download|https://codeberg.org/bardo/2status/releases/tag/v0.9.3|download
+
+MENUSECTION|Developer
+BUTTON|Blog|https://blog.cordeis.com/|home-2
