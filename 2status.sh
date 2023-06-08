@@ -377,6 +377,24 @@ _2status.check_port() {
     return 1
 }
 
+# @description Check exit code for given command
+# @arg $1 string Title
+# @arg $1 string Shell command
+_2status.check_command() {
+    local I
+    for I in $(seq $ATTEMPS)
+    do
+        eval "$2"
+        if [ $? -eq 0 ]
+        then
+            _2status.entry "$1" "$2" "0"
+            return 0
+        fi
+    done
+    _2status.entry "$1" "$2" "1"
+    return 1
+}
+
 SCONF="2status.conf"
 if [ $# -gt 0 ]
 then
@@ -446,6 +464,9 @@ then
                 ;;
             PORT)
                 _2status.check_port "$PA1" "$PA2" "$PA3"
+                ;;
+            COM)
+                _2status.check_command "$PA1" "$PA2"
                 ;;
             1HOSTGROUP)
                 if [ -f "$_1NETLOCAL/$PA2.hosts" ]
