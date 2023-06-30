@@ -7,6 +7,7 @@ TITLE="2Status"
 TEMPLATE="mat"
 STVER="$(tail -n 1 "CHANGELOG" | cut -d\  -f 1)"
 OUTDIR="out"
+DATADIR="data"
 LOGDIR="log"
 VERBOSEMODE="N"
 TEMPNEW=/tmp/.2status-tempnew #provisory, real path will be created in start
@@ -95,7 +96,7 @@ _2status.start() {
     TEMPNEW="$(1temp name .html)"
     TEMPSEC="$(1temp name .vars)"
     TEMPALE="$(1temp file .alerts)"
-    mkdir -p "$OUTDIR" "$LOGDIR"
+    mkdir -p "$OUTDIR" "$DATADIR" "$LOGDIR"
     cp "misc/2status.ico" "$OUTDIR/favicon.ico"
 #--    cat "templates/$TEMPLATE/head.txt" | sed "s/\-=\[title\]=\-/$TITLE/g" > "$TEMPNEW"
     cp -r templates/$TEMPLATE/* "$OUTDIR/"
@@ -147,41 +148,41 @@ _2status.log_it() {
     _2verb "1morph escape em $2 de $#"
     shift
     _TESTID="$(1morph escape "$*")"
-    if [ ! -f "$LOGDIR/$_TESTID.2st" ]
+    if [ ! -f "$DATADIR/$_TESTID.2st" ]
     then
-        _1db "$LOGDIR" "2st" new "$_TESTID"
+        _1db "$DATADIR" "2st" new "$_TESTID"
     fi
-    if [ ! -f "$LOGDIR/$_TESTID.down" ]
+    if [ ! -f "$DATADIR/$_TESTID.down" ]
     then
-        _1db "$LOGDIR" "down" new "$_TESTID"
+        _1db "$DATADIR" "down" new "$_TESTID"
     fi
     _IDTOTAL="S$(date "+%Y-%m-%d")"
 
-    _IDPREV=$(grep "_down="  "$LOGDIR/$_TESTID.2st" |tail -n 1 | sed 's/\(.*\)=\(.*\)/\1/')
+    _IDPREV=$(grep "_down="  "$DATADIR/$_TESTID.2st" |tail -n 1 | sed 's/\(.*\)=\(.*\)/\1/')
     if [ -z "$_IDTOTAL" ]
     then
         _IDPREV="$_IDTOTAL""_down"
     fi
     _IDON="$_IDTOTAL""_on"
-    _AUX=$(( $(_1db.get "$LOGDIR" "2st" "$_TESTID" "$_IDTOTAL") + 1 ))
-    _PREVIOUS=$(("$(_1db.get "$LOGDIR" "2st" "$_TESTID" "$_IDPREV")"))
+    _AUX=$(( $(_1db.get "$DATADIR" "2st" "$_TESTID" "$_IDTOTAL") + 1 ))
+    _PREVIOUS=$(("$(_1db.get "$DATADIR" "2st" "$_TESTID" "$_IDPREV")"))
 
-    _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDTOTAL" $_AUX
+    _1db.set  "$DATADIR" "2st" "$_TESTID" "$_IDTOTAL" $_AUX
     if [ "$_STATUS" = "0" ]
     then
-        _AUX=$(( $(_1db.get "$LOGDIR" "2st" "$_TESTID" "$_IDON") + 1 ))
-        _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDON" $_AUX
+        _AUX=$(( $(_1db.get "$DATADIR" "2st" "$_TESTID" "$_IDON") + 1 ))
+        _1db.set  "$DATADIR" "2st" "$_TESTID" "$_IDON" $_AUX
         if [ $_PREVIOUS -gt 0 ]
         then
             _AUX=$(1elapsed $_PREVIOUS)
-            _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV"
-            _1db.set  "$LOGDIR" "down" "$_TESTID" "$(date -d @$_PREVIOUS "+%Y-%m-%d_%H:%M")" $_AUX
+            _1db.set  "$DATADIR" "2st" "$_TESTID" "$_IDPREV"
+            _1db.set  "$DATADIR" "down" "$_TESTID" "$(date -d @$_PREVIOUS "+%Y-%m-%d_%H:%M")" $_AUX
             echo $_TESTID 0 $_AUX >> $TEMPALE
         fi
     else
         if [ $_PREVIOUS -eq 0 ]
         then
-            _1db.set  "$LOGDIR" "2st" "$_TESTID" "$_IDPREV" $(_now)
+            _1db.set  "$DATADIR" "2st" "$_TESTID" "$_IDPREV" $(_now)
             echo $_TESTID 1 >> $TEMPALE
         else
             echo "$_PREVIOUS"
@@ -285,9 +286,9 @@ _2status.entry() {
 _2status.make_chart() {
     local SINGLE XPOS YPOS COUNT DELTA PERC POINTS DATE
     local FILE="$OUTDIR/$1.svg"
-    local LOGF="$LOGDIR/$1.2st"
+    local DATAF="$DATADIR/$1.2st"
     local TXTS="$(mktemp)"
-    local TOTAL=$(grep _on= "$LOGF" | wc -l)
+    local TOTAL=$(grep _on= "$DATAF" | wc -l)
     if [ $TOTAL -gt 30 ]
     then
         TOTAL=30
@@ -302,7 +303,7 @@ _2status.make_chart() {
     POINTS=""
     # (240 - 15) % TOTAL
     DELTA=$((225/($TOTAL-1)))
-    for SINGLE in $(grep -v _on= "$LOGDIR/$1.2st" | grep -v _down= | cut -d= -f 1 | tail -n $TOTAL | tac)
+    for SINGLE in $(grep -v _on= "$DATADIR/$1.2st" | grep -v _down= | cut -d= -f 1 | tail -n $TOTAL | tac)
     do
         if [ $COUNT -eq $TOTAL ]
         then
@@ -310,7 +311,7 @@ _2status.make_chart() {
         else
             XPOS=$((15 + ($TOTAL - $COUNT) * $DELTA ))
         fi
-        PERC=$(( (100 * $(( $(_1db.get "$LOGDIR" "2st" "$1" "$SINGLE"_on) )) ) / $(_1db.get "$LOGDIR" "2st" "$1" "$SINGLE") ))
+        PERC=$(( (100 * $(( $(_1db.get "$DATADIR" "2st" "$1" "$SINGLE"_on) )) ) / $(_1db.get "$DATADIR" "2st" "$1" "$SINGLE") ))
         YPOS=$((110 - $PERC))
         DATE=$(echo $SINGLE | sed 's/^S//')
         POINTS="$POINTS $XPOS,$YPOS"
