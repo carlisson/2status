@@ -12,7 +12,8 @@ VERBOSEMODE="N"
 TEMPNEW=/tmp/.2status-tempnew #provisory, real path will be created in start
 TEMPSEC=/tmp/.2status-tempsec
 TEMPALE=/tmp/.2status-tempale # Alerts
-NH1PACK="https://codeberg.org/attachments/0da5708e-3c0d-4f6c-a5b5-75aa8641e467" # 1.4.3
+NH1PACK="https://codeberg.org/attachments/baf953ff-f1d7-49d7-9ba1-58561ff1d9e7" # 1.4.4
+NH1VERS="1.4.4"
 BUILDER="2Status $STVER"
 BOT_TELEGRAM="" # telegram group
 ATTEMPS=1 # when checking results in error, how many times to try again?
@@ -30,6 +31,22 @@ yes_or_no() {
             [Nn]*) return  1 ;;
         esac
     done
+}
+
+install_nh1() {
+    # NH1 v1.4
+    if [ -f /usr/bin/wget ]
+    then
+        wget "$NH1PACK" -O nh1.tgz
+    elif [ -f /usr/bin/curl ]
+    then
+        curl -o nh1.tgz -OL "$NH1PACK"
+    else
+        echo "2status needs wget or curl to install nh1"
+        exit 1
+    fi
+    tar -zxf nh1.tgz
+    rm nh1.tgz
 }
 
 # @description Prints if in verbose mode
@@ -58,19 +75,7 @@ else
     else
         if yes_or_no "NH1 not found. Do you want to download it now?"
         then
-            # NH1 v1.4
-            if [ -f /usr/bin/wget ]
-            then
-                wget "$NH1PACK" -O nh1.tgz
-            elif [ -f /usr/bin/curl ]
-            then
-                curl -o nh1.tgz -OL "$NH1PACK"
-            else
-                echo "2status needs wget or curl to install nh1"
-                exit 1
-            fi
-            tar -zxf nh1.tgz
-            rm nh1.tgz
+            install_nh1
             source "nh1/nh1"
         else
             echo "You can get it with:"
@@ -401,7 +406,17 @@ then
     case $1 in
         update)
             git pull
-            1update
+            if [ -d "nh1/" ]
+            then
+                _ACTVERS="$(tail -n 1 nh1/CHANGELOG | cut -d\  -f 1)"
+                if [ "x$_ACTVERS" != "x$_NH1VERS" ]
+                then
+                    rm -rf "nh1"
+                    install_nh1
+                fi
+            else
+                1update
+            fi
             exit 0
             ;;
         version)
