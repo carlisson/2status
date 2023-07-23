@@ -51,3 +51,4 @@
 0.9d6  2023-06-08: Created hotfile (2h)
 0.9d7  2023-06-30: updated to nh1 1.4.4
 0.9d8  2023-06-30: logdir is now data dir (data/)
+0.9d9  2023-07-23: Bot operating mode (single / all) allowing grouping of messages. To Improve.

@@ -2,7 +2,7 @@ OUTDIR|out
 TITLE|2Status Page
 TEMPLATE|mat
 ATTEMPTS|1
-BOT|telegram|teste
+BOT|telegram|teste|all
 
 HEAD|Hosts
 HOST|Codeberg|217.197.91.145

@@ -17,6 +17,9 @@ NH1PACK="https://codeberg.org/attachments/baf953ff-f1d7-49d7-9ba1-58561ff1d9e7" 
 NH1VERS="1.4.4"
 BUILDER="2Status $STVER"
 BOT_TELEGRAM="" # telegram group
+BOT_MODE="all"
+TURNED_DOWN="none" # list of services turned down (for bot in single mode)
+TURNED_UP="none" # list of services turned up (for bot in single mode)
 ATTEMPS=1 # when checking results in error, how many times to try again?
 
 # Returns actual time in seconds since 1970
@@ -120,6 +123,11 @@ _2status.alert() {
         _2verb "service $1, status $_STA, downtime $_DOW"
         if [ $_STA -eq 0 ]
         then
+            if [ "$TURNED_UP" = "none" ]
+            then
+                TURNED_UP=""
+            fi
+            TURNED_UP="$TURNED_UP $_SERV"
             if [ -f "$STDIR/templates/$TEMPLATE/bot-up.angel" ]
             then
                 _MSG=$(1angel run $STDIR/templates/$TEMPLATE/bot-up.angel service="$_SERV" downtime="$_DOW")
@@ -127,6 +135,11 @@ _2status.alert() {
                 _MSG="✅ $_SERV 👍 $_NOW ⏲️ $_DOW."
             fi
         else
+            if [ "$TURNED_DOWN" = "none" ]
+            then
+                TURNED_DOWN=""
+            fi
+            TURNED_DOWN="$TURNED_DOWN $_SERV"
             if [ -f "$STDIR/templates/$TEMPLATE/bot-down.angel" ]
             then
                 _MSG="$(1angel run $STDIR/templates/$TEMPLATE/bot-down.angel service="$_SERV")"
@@ -134,7 +147,10 @@ _2status.alert() {
                 _MSG="❌ $_SERV 👎 $_NOW."
             fi
         fi
-        1bot telegram say "$BOT_TELEGRAM" "$_MSG"
+        if [ "$BOT_MODE" = "all" ]
+        then
+            1bot telegram say "$BOT_TELEGRAM" "$_MSG"
+        fi
     fi
 }
 
@@ -468,6 +484,10 @@ then
                 then
                     BOT_TELEGRAM="$PA2"
                 fi
+                if [ "$PA3" = "single" ]
+                then
+                    BOT_MODE="single"
+                fi
                 ;;
             HEAD)
                 _2status.section "$PA1"
@@ -563,5 +583,22 @@ do
     _2status.alert $LINE
     sleep 2
 done
+
+if [ ! -z "$BOT_TELEGRAM" ]
+then
+    if [ "$BOT_MODE" = "single" ]
+    then
+        if [ "$TURNED_UP" != "$TURNED_DOWN" ]
+        then
+            if [ -f "$STDIR/templates/$TEMPLATE/bot-resume.angel" ]
+            then
+                _MSG="$(1angel run $STDIR/templates/$TEMPLATE/bot-resume.angel toup="$TURNED_UP" todown="$TURNED_DOWN")"
+            else
+                _MSG="✅ $TURNED_UP ❌ $TURNED_DOWN ⏲️ $_NOW."
+            fi
+            1bot telegram say "$BOT_TELEGRAM" "$_MSG"
+        fi
+    fi
+fi
 
 rm $TEMPALE
