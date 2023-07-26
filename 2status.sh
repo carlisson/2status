@@ -20,6 +20,7 @@ BOT_TELEGRAM="" # telegram group
 BOT_MODE="all"
 TURNED_DOWN="none" # list of services turned down (for bot in single mode)
 TURNED_UP="none" # list of services turned up (for bot in single mode)
+LATEST_DOWN="none" # latest downtime
 ATTEMPS=1 # when checking results in error, how many times to try again?
 
 # Returns actual time in seconds since 1970
@@ -106,6 +107,36 @@ _2status.start() {
     rm $OUTDIR/*.txt $OUTDIR/*.angel &> /dev/null
 }
 
+# @description Returns date
+_2status.now() {
+    date "+%Y-%m-%d %H:%M"
+}
+
+# @description Message for one machine status
+# @arg $1 Service
+# @arg $2 Uptime (null for service down)
+_2status.msg_one() {
+    _NOW="$(_2status.now)"
+    _SERV="$1"
+    if [ $# -eq 2 ]
+    then
+        _DOW="$2"
+        if [ -f "$STDIR/templates/$TEMPLATE/bot-up.angel" ]
+        then
+            1angel run $STDIR/templates/$TEMPLATE/bot-up.angel service="$_SERV" downtime="$_DOW"
+        else
+            echo "✅ $_SERV 👍 $_NOW ⏲️ $_DOW."
+        fi
+    else
+        if [ -f "$STDIR/templates/$TEMPLATE/bot-down.angel" ]
+        then
+            1angel run $STDIR/templates/$TEMPLATE/bot-down.angel service="$_SERV"
+        else
+            echo "❌ $_SERV 👎 $_NOW."
+        fi
+    fi
+}
+
 # @description Alert when test become up or down
 # @arg $1 string Service name
 # @arg $2 status 0: ok; 1: fail
@@ -117,7 +148,6 @@ _2status.alert() {
     _STA=$1
     shift
     _DOW="$*"
-    _NOW="$(date "+%Y-%m-%d %H:%M")"
     if [ ! -z "$BOT_TELEGRAM" ]
     then
         _2verb "service $1, status $_STA, downtime $_DOW"
@@ -125,27 +155,20 @@ _2status.alert() {
         then
             if [ "$TURNED_UP" = "none" ]
             then
-                TURNED_UP=""
-            fi
-            TURNED_UP="$TURNED_UP $_SERV"
-            if [ -f "$STDIR/templates/$TEMPLATE/bot-up.angel" ]
-            then
-                _MSG=$(1angel run $STDIR/templates/$TEMPLATE/bot-up.angel service="$_SERV" downtime="$_DOW")
+                TURNED_UP="$_SERV"
             else
-                _MSG="✅ $_SERV 👍 $_NOW ⏲️ $_DOW."
+                TURNED_UP="$TURNED_UP|$_SERV"
             fi
+            LATEST_DOWN="$_DOW"
+            _MSG="$(_2status.msg_one "$_SERV" "$_DOW")"
         else
             if [ "$TURNED_DOWN" = "none" ]
             then
-                TURNED_DOWN=""
-            fi
-            TURNED_DOWN="$TURNED_DOWN $_SERV"
-            if [ -f "$STDIR/templates/$TEMPLATE/bot-down.angel" ]
-            then
-                _MSG="$(1angel run $STDIR/templates/$TEMPLATE/bot-down.angel service="$_SERV")"
+                TURNED_DOWN="$_SERV"
             else
-                _MSG="❌ $_SERV 👎 $_NOW."
-            fi
+                TURNED_DOWN="$TURNED_DOWN|$_SERV"
+            fi            
+            _MSG="$(_2status.msg_one "$_SERV")"
         fi
         if [ "$BOT_MODE" = "all" ]
         then
@@ -588,13 +611,35 @@ if [ ! -z "$BOT_TELEGRAM" ]
 then
     if [ "$BOT_MODE" = "single" ]
     then
-        if [ "$TURNED_UP" != "$TURNED_DOWN" ]
+        if [ "$TURNED_UP" != "none" ]
         then
-            if [ -f "$STDIR/templates/$TEMPLATE/bot-resume.angel" ]
+            if [[ "$TURNED_UP" =~ "|" ]]
             then
-                _MSG="$(1angel run $STDIR/templates/$TEMPLATE/bot-resume.angel toup="$TURNED_UP" todown="$TURNED_DOWN")"
+                _AUX="$(echo "$TURNED_UP" | sed "s/|/, /g")"
+                if [ -f "$STDIR/templates/$TEMPLATE/bot-up-list.angel" ]
+                then
+                    _MSG="$(1angel run $STDIR/templates/$TEMPLATE/bot-up-list.angel list="$_AUX")"
+                else
+                    _MSG="✅ $_AUX ⏲️ $(_2status.now)."
+                fi
             else
-                _MSG="✅ $TURNED_UP ❌ $TURNED_DOWN ⏲️ $_NOW."
+                _MSG="$(_2status.msg_one "$TURNED_UP" "$LATEST_DOWN")"
+            fi
+            1bot telegram say "$BOT_TELEGRAM" "$_MSG"
+        fi
+        if [ "$TURNED_DOWN" != "none" ]
+        then
+            if [[ "$TURNED_DOWN" =~ "|" ]]
+            then
+                _AUX="$(echo "$TURNED_DOWN" | sed "s/|/, /g")"
+                if [ -f "$STDIR/templates/$TEMPLATE/bot-down-list.angel" ]
+                then
+                    _MSG="$(1angel run $STDIR/templates/$TEMPLATE/bot-down-list.angel list="$_AUX")"
+                else
+                    _MSG="❌ $_AUX ⏲️ $(_2status.now)."
+                fi
+            else
+                _MSG="$(_2status.msg_one "$TURNED_DOWN")"
             fi
             1bot telegram say "$BOT_TELEGRAM" "$_MSG"
         fi
